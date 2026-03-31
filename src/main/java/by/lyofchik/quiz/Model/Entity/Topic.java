@@ -1,5 +1,6 @@
 package by.lyofchik.quiz.Model.Entity;
 
+import by.lyofchik.quiz.Model.Enum.TopicName;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +18,6 @@ public class Topic {
 
     @Nationalized
     @Column(name = "name", length = 20)
-    private String name;
-
-
+    @Enumerated(EnumType.STRING)
+    private TopicName name;
 }

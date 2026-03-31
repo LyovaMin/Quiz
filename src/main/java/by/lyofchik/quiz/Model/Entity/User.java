@@ -1,5 +1,6 @@
 package by.lyofchik.quiz.Model.Entity;
 
+import by.lyofchik.quiz.Model.Enum.Role;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +30,5 @@ public class User {
 
     @Nationalized
     @Column(name = "role", length = 20)
-    private String role;
-
-
+    private Role role;
 }

@@ -17,9 +17,8 @@ public class GameMember {
     private Integer id;
 
     @MapsId
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "member_id", nullable = false)
-    private by.lyofchik.quiz.Integer users;
+    private Integer users;
 
     @Column(name = "lobby_id")
     private Integer lobby;

@@ -1,5 +1,6 @@
 package by.lyofchik.quiz.Model.Entity;
 
+import by.lyofchik.quiz.Model.Enum.LobbyStatus;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,13 +19,14 @@ public class Lobby {
     @Column(name = "lobby_id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "quiz_id")
-    private by.lyofchik.quiz.Integer quiz;
+    private Quiz quiz;
 
     @Nationalized
     @Column(name = "status", length = 20)
-    private String status;
+    @Enumerated(EnumType.STRING)
+    private LobbyStatus status;
 
     @Nationalized
     @Column(name = "password", length = 20)
@@ -35,7 +37,7 @@ public class Lobby {
 
     @OneToMany
     @JoinColumn(name = "lobby_id")
-    private Set<by.lyofchik.quiz.Integer> gameMembers = new LinkedHashSet<>();
+    private Set<GameMember> gameMembers = new LinkedHashSet<>();
 
 
 }

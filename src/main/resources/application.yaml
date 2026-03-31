@@ -1,3 +1,23 @@
 spring:
   application:
     name: Quiz
+  datasource:
+    url:
+      jdbc: sqlserver://localhost:1433;database=Quiz;encrypt=true;trustServerCertificate=true
+      username: sa
+      password: admin
+      driver-class-name: com.microsoft.sqlserver.jdbc.SQLServerDriver
+  jpa:
+    database-platform: org.hibernate.dialect.SQLServerDialect
+    show-sql: true
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          batch_size: 1000
+        order_inserts: true
+
+server:
+  port: 6769
+

@@ -1,5 +1,6 @@
 package by.lyofchik.quiz.Model.Entity;
 
+import by.lyofchik.quiz.Model.Enum.BonusType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -17,7 +18,8 @@ public class Bonus {
 
     @Nationalized
     @Column(name = "type", length = 15)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private BonusType type;
 
     @Nationalized
     @Column(name = "description")

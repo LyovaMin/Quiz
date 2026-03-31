@@ -1,5 +1,6 @@
 package by.lyofchik.quiz.Model.Entity;
 
+import by.lyofchik.quiz.Model.Enum.Types;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,13 +20,14 @@ public class Question {
     @Column(name = "description", length = 512)
     private String description;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "quiz_id")
-    private by.lyofchik.quiz.Integer quiz;
+    private Quiz quiz;
 
     @Nationalized
     @Column(name = "type", length = 15)
-    private String type;
+    @Enumerated(EnumType.STRING)
+    private Types type;
 
     @Nationalized
     @Column(name = "image_url", length = 512)

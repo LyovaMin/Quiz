@@ -15,9 +15,9 @@ public class Answer {
     @Column(name = "answer_id", nullable = false)
     private Integer id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "question_id")
-    private by.lyofchik.quiz.Integer question;
+    private Question question;
 
     @Nationalized
     @Column(name = "text")
