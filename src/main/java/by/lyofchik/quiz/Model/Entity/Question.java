@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
+import org.jspecify.annotations.NonNull;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -20,9 +24,8 @@ public class Question {
     @Column(name = "description", length = 512)
     private String description;
 
-    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "quiz_id")
-    private Quiz quiz;
+    private Integer quiz;
 
     @Nationalized
     @Column(name = "type", length = 15)
@@ -35,6 +38,8 @@ public class Question {
 
     @Column(name = "points")
     private Integer points;
-
-
+    
+    @NonNull
+    @OneToMany(mappedBy = "question")
+    private Set<Answer> answers = new LinkedHashSet<>();
 }

@@ -6,9 +6,10 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum Types {
-    HARD("Трудный"),
-    MEDIUM("Средний"),
-    EASY("Легкий");
+    HARD("Трудный", 100),
+    MEDIUM("Средний", 50),
+    EASY("Легкий", 25);
 
     private final String typeText;
+    private final int defaultPoints;
 }

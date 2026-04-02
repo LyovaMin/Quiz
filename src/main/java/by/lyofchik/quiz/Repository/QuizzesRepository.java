@@ -6,4 +6,5 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface QuizzesRepository extends JpaRepository<Quiz, Integer> {
+    Quiz getQuizById(Integer id);
 }

@@ -4,8 +4,11 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
+import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -40,6 +43,10 @@ public class Quiz {
 
     @Column(name = "time_limit")
     private Integer timeLimit;
+
+    @NonNull
+    @OneToMany(mappedBy = "quiz")
+    private Set<Question> questions = new LinkedHashSet<>();
 
 
 }
