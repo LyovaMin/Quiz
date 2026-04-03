@@ -25,6 +25,4 @@ public class AnalyticsController {
     public Response myStat(@RequestParam String username) {
         return analyticsService.myStat(username);
     }
-
-
 }
