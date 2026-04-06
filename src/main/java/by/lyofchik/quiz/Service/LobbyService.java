@@ -23,7 +23,11 @@ public class LobbyService {
     }
 
     public Response lobby(Integer id) {
-        return null;
+        var lobby = lobbyRepository.findById(id);
+        if (lobby.isPresent()) {
+            return Response.success(lobby);
+        }
+        return Response.error();
     }
 
     public Response join(int id, String lobbyPassword) {
