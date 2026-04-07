@@ -2,7 +2,6 @@ package by.lyofchik.quiz.Service;
 
 import by.lyofchik.quiz.Model.DTO.Request.LobbiesRq;
 import by.lyofchik.quiz.Model.DTO.Response.Response;
-import by.lyofchik.quiz.Model.Entity.Lobby;
 import by.lyofchik.quiz.Repository.LobbyRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
