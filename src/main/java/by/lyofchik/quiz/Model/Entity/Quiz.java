@@ -47,6 +47,4 @@ public class Quiz {
     @NonNull
     @OneToMany(mappedBy = "quiz")
     private Set<Question> questions = new LinkedHashSet<>();
-
-
 }
