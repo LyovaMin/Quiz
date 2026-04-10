@@ -19,7 +19,7 @@ public class GameController {
 
     @MessageMapping("/game/{lobbyId}/answer")
     @SendTo("/topic/game/{lobbyId}/result")
-    public Response game(@RequestBody GameRq request, @PathVariable String lobbyId) {
+    public Response game(@RequestBody GameRq request, @PathVariable int lobbyId) {
         return gameService.answer(request, lobbyId);
     }
 }

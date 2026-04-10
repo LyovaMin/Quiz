@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class GameService {
 
-    public Response answer(GameRq request, String lobbyId) {
+    public Response answer(GameRq request, int lobbyId) {
 
         return Response.success();
     }

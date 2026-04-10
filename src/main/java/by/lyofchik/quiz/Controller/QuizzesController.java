@@ -3,6 +3,7 @@ package by.lyofchik.quiz.Controller;
 import by.lyofchik.quiz.Model.DTO.Request.QuizRq;
 import by.lyofchik.quiz.Model.DTO.Request.QuizzesRq;
 import by.lyofchik.quiz.Model.DTO.Response.Response;
+import by.lyofchik.quiz.Service.ModificationService;
 import by.lyofchik.quiz.Service.QuizzesService;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -12,8 +13,9 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class QuizzesController {
     private QuizzesService quizzesService;
+    private ModificationService modificationService;
 
-    @GetMapping
+    @PostMapping
     public Response getQuizzes(@RequestBody QuizzesRq request) {
         return quizzesService.allQuizzes(request);
     }
@@ -23,18 +25,18 @@ public class QuizzesController {
         return quizzesService.getQuiz(id);
     }
 
-    @PostMapping("/create")
+    @PutMapping("/create")
     public Response createQuiz(@RequestBody QuizRq request) {
-        return quizzesService.createQuiz(request);
+        return modificationService.createQuiz(request);
     }
 
-    @PostMapping("/delete/{id}")
+    @DeleteMapping("/delete/{id}")
     public Response deleteQuiz(@PathVariable int id) {
-        return quizzesService.deleteQuiz(id);
+        return modificationService.deleteQuiz(id);
     }
 
     @PostMapping("/update/{id}")
     public Response updateQuiz(@PathVariable int id, @RequestBody QuizRq request) {
-        return quizzesService.updateQuiz(id, request);
+        return modificationService.updateQuiz(id, request);
     }
 }
