@@ -14,5 +14,6 @@ public class QuizRq {
     private Instant createdAt;
     private int createdBy;
     private int timeLimitSeconds;
+    private boolean isPublic;
     private List<QuestionDTO> questions;
 }

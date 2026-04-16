@@ -7,12 +7,12 @@ import org.mapstruct.Mapping;
 
 @Mapper
 public interface UserMapper {
-    @Mapping(source = "login", target = "name")
-    @Mapping(source = "imageUrl", target = "image")
-    User toEntity(UserDTO userDTO);
-
-    @Mapping(source = "name", target = "login")
-    @Mapping(source = "image", target = "imageUrl")
-    @Mapping(target = "passwordHash", ignore = true)
-    UserDTO toDTO(User user);
+//    @Mapping(source = "name", target = "login")
+//    @Mapping(source = "image", target = "imageUrl")
+//    @Mapping(target = "passwordHash", ignore = true)
+//    User toEntity(UserDTO userDTO);
+//
+//    @Mapping(source = "login", target = "name")
+//    @Mapping(source = "imageUrl", target = "image")
+//    UserDTO toDTO(User user);
 }

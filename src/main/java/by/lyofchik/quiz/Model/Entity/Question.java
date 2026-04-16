@@ -3,9 +3,9 @@ package by.lyofchik.quiz.Model.Entity;
 import by.lyofchik.quiz.Model.Enum.Types;
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
-import org.jspecify.annotations.NonNull;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -24,8 +24,9 @@ public class Question {
     @Column(name = "description", length = 512)
     private String description;
 
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id")
-    private Integer quiz;
+    private Quiz quiz;
 
     @Nationalized
     @Column(name = "type", length = 15)
@@ -40,6 +41,6 @@ public class Question {
     private Integer points;
     
     @NonNull
-    @OneToMany(mappedBy = "question")
+    @OneToMany(mappedBy = "question", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Answer> answers = new LinkedHashSet<>();
 }

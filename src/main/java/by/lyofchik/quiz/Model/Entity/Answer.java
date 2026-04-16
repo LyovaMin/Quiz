@@ -15,8 +15,9 @@ public class Answer {
     @Column(name = "answer_id", nullable = false)
     private Integer id;
 
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "question_id")
-    private Integer question;
+    private Question question;
 
     @Nationalized
     @Column(name = "text")

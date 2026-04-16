@@ -20,21 +20,13 @@ public class ModificationService {
     public Response createQuiz(QuizRq request) {
         try {
             Quiz newQuiz = quizMapper.toQuiz(request);
-            request.getQuestions()
-                    .forEach(q -> {
-                        Question question = quizMapper.toQuestion(q, newQuiz.getId());
-                        newQuiz.getQuestions().add(question);
-                        q.getAnswers()
-                                .forEach(a -> {
-                                    question.getAnswers().add(quizMapper.toAnswer(a, newQuiz.getId()));
-                                });
-                    });
+            log.info("QuizzesController.createQuiz - {}", newQuiz);
             quizzesRepository.save(newQuiz);
+            return Response.success();
         }  catch (Exception e) {
             log.error(e.getMessage());
-            Response.error();
+            return Response.error();
         }
-        return Response.success();
     }
 
     public Response deleteQuiz(int id) {
@@ -43,7 +35,11 @@ public class ModificationService {
     }
 
     public Response updateQuiz(int id, QuizRq request) {
-        Quiz quiz = quizzesRepository.getQuizById(id);
-
+        Quiz quiz = quizMapper.toQuiz(request);
+        if(quiz.getCreator().equals(id)) {
+            quizMapper.updateQuizFromRq(request, quiz);
+            return Response.success();
+        }
+        return Response.error();
     }
 }

@@ -2,9 +2,9 @@ package by.lyofchik.quiz.Model.Entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
+import lombok.NonNull;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
-import org.jspecify.annotations.NonNull;
 
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -45,6 +45,6 @@ public class Quiz {
     private Integer timeLimit;
 
     @NonNull
-    @OneToMany(mappedBy = "quiz")
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Question> questions = new LinkedHashSet<>();
 }
