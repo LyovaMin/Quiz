@@ -53,6 +53,8 @@ document.getElementById('quiz-form').onsubmit = async (e) => {
     const payload = {
         title: document.getElementById('title').value,
         description: document.getElementById('description').value,
+        createdBy: parseInt(document.getElementById('creatorId').value) || 0,
+        is_public: true,
         questions: Array.from(document.querySelectorAll('.question-block')).map(q => ({
             description: q.querySelector('.q-desc').value,
             points: 1,

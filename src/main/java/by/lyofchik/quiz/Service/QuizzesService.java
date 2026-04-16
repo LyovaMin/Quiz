@@ -10,6 +10,7 @@ import by.lyofchik.quiz.Model.Mapper.QuizMapper;
 import by.lyofchik.quiz.Repository.QuizzesRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,7 +27,7 @@ public class QuizzesService {
 
     public Response allQuizzes(QuizzesRq request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
-        return Response.success(quizzesRepository.findAll(pageable));
+        return Response.success(quizzesRepository.findAll(pageable).map(quizMapper::toQuizRq));
     }
 
     public Response getQuiz(int id) {
