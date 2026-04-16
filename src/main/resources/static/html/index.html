@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz App - Список</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+<div class="max-w-4xl mx-auto">
+    <div class="flex justify-between items-center mb-8">
+        <h1 class="text-3xl font-bold">Квизы</h1>
+        <a href="edit.html" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">Создать новый</a>
+    </div>
+
+    <div id="quiz-list" class="grid gap-4">
+    </div>
+
+    <div id="modal" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg max-w-2xl w-full p-6 overflow-y-auto max-h-[90vh]">
+            <div id="modal-content"></div>
+            <button onclick="closeModal()" class="mt-6 w-full py-2 bg-gray-200 rounded">Закрыть</button>
+        </div>
+    </div>
+</div>
+<script src="/js/quizzes.js"></script>
+</body>
+</html>
