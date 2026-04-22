@@ -29,7 +29,7 @@ public class GameMember {
 
     @ColumnDefault("0")
     @Column(name = "progress")
-    private Double progress;
+    private Float progress;
 
     @Column(name = "last_update")
     private Instant lastUpdate;

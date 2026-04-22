@@ -8,5 +8,5 @@ import java.util.Optional;
 
 @Repository
 public interface LobbyRepository extends JpaRepository<Lobby, Integer> {
-    Optional<Lobby> findById(Integer id);
+    Lobby findById(int id);
 }

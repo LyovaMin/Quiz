@@ -8,7 +8,9 @@ import lombok.Getter;
 public enum BonusType {
     DOUBLING("Doubling"),
     HALFTOHALF("50/50"),
-    FREEZE("Freeze");
+    FREEZE("Freeze"),
+    SECOND_CHANCE("Second Chance"),
+    BONUS_POINTS("Bonus Points"),;
 
     private final String bonusName;
 }
