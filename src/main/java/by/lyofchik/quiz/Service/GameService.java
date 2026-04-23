@@ -4,33 +4,24 @@ import by.lyofchik.quiz.Model.DTO.Request.GameRq;
 import by.lyofchik.quiz.Model.DTO.Response.Response;
 import by.lyofchik.quiz.Model.Entity.*;
 import by.lyofchik.quiz.Model.Enum.BonusType;
-import by.lyofchik.quiz.Repository.AnswerRepository;
-import by.lyofchik.quiz.Repository.GameMemberRepository;
-import by.lyofchik.quiz.Repository.LobbyRepository;
-import jakarta.annotation.PostConstruct;
+import by.lyofchik.quiz.Model.Mapper.AnalyticsMapper;
+import by.lyofchik.quiz.Repository.*;
+import by.lyofchik.quiz.Utils.Constants;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
-import java.util.NavigableMap;
 import java.util.Objects;
-import java.util.TreeMap;
 
 @Service
+@AllArgsConstructor
 public class GameService {
-    LobbyRepository lobbyRepository;
-    AnswerRepository answerRepository;
-    GameMemberRepository gameMemberRepository;
-    NavigableMap<Long, Float> bonuses = new TreeMap<>();
-
-    @PostConstruct
-    void init() {
-        bonuses.put(0L, 1f);
-        bonuses.put(2L, 1.1f);
-        bonuses.put(4L, 1.2f);
-        bonuses.put(6L, 1.3f);
-        bonuses.put(8L, 1.4f);
-        bonuses.put(10L, 1.5f);
-    }
+    private LobbyRepository lobbyRepository;
+    private AnswerRepository answerRepository;
+    private GameMemberRepository gameMemberRepository;
+    private QuestionStatRepository questionStatRepository;
+    private QuizAttemptRepository quizAttemptRepository;
+    private AnalyticsMapper analyticsMapper;
 
     public Response answer(GameRq request, int lobbyId) {
         Lobby lobby = lobbyRepository.findById(lobbyId);
@@ -43,6 +34,8 @@ public class GameService {
 
         int points = countPoints(question, request, correct);
         member.setScore(member.getScore() + points);
+        QuestionStat stat = analyticsMapper.toQuestionStat(request, correct);
+        questionStatRepository.save(stat);
         return Response.success(member);
     }
 
@@ -59,7 +52,7 @@ public class GameService {
 
     private float countBonus(long decidedFor) {
         long grade = 10 - decidedFor;
-        return bonuses.higherEntry(grade).getValue();
+        return Constants.getGrade(grade);
     }
 
     private float countProgress(Quiz quiz){

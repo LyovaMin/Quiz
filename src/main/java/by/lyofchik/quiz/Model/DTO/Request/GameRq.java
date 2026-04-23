@@ -9,6 +9,7 @@ import java.time.Instant;
 public class GameRq {
     int userId;
     int questionId;
+    int attemptId;
     String answer;
     BonusType activeBonus;
     Instant startedAt;

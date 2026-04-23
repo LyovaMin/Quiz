@@ -22,4 +22,6 @@ public class GameController {
     public Response game(@RequestBody GameRq request, @PathVariable int lobbyId) {
         return gameService.answer(request, lobbyId);
     }
+
+
 }
