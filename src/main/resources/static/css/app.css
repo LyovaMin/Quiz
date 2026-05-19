@@ -110,6 +110,13 @@ a {
     margin-bottom: 18px;
 }
 
+.profile-layout {
+    display: grid;
+    grid-template-columns: minmax(360px, 1fr) minmax(320px, 420px);
+    gap: 16px;
+    align-items: start;
+}
+
 .panel {
     padding: 18px;
 }
@@ -402,6 +409,7 @@ label {
     }
 
     .dashboard-grid,
+    .profile-layout,
     .filters,
     .stats-grid {
         grid-template-columns: 1fr;

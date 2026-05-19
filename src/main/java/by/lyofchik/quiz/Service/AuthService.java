@@ -12,6 +12,13 @@ import lombok.AllArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Locale;
+import java.util.UUID;
 
 @Service
 @AllArgsConstructor
@@ -72,6 +79,34 @@ public class AuthService {
         return userRepository.findById(id).orElse(null);
     }
 
+    public Response updateCurrentUser(String username, String password, MultipartFile avatar, HttpSession session) {
+        User user = currentUserOrNull(session);
+        if (user == null) {
+            return Response.error("401", "Not authenticated");
+        }
+        return updateProfile(user, username, password, avatar);
+    }
+
+    public Response users(HttpSession session) {
+        User currentUser = currentUserOrNull(session);
+        if (!isAdmin(currentUser)) {
+            return Response.error("403", "Admin access required");
+        }
+        return Response.success(userRepository.findAll().stream()
+                .map(this::toDto)
+                .toList());
+    }
+
+    public Response updateUser(Integer id, String username, String password, MultipartFile avatar, HttpSession session) {
+        User currentUser = currentUserOrNull(session);
+        if (!isAdmin(currentUser)) {
+            return Response.error("403", "Admin access required");
+        }
+        return userRepository.findById(id)
+                .map(user -> updateProfile(user, username, password, avatar))
+                .orElseGet(() -> Response.error("404", "User not found"));
+    }
+
     public boolean isAdmin(User user) {
         return user != null && user.getRole() == Role.ADMIN;
     }
@@ -83,5 +118,59 @@ public class AuthService {
         dto.setImage(user.getImageUrl());
         dto.setRole(user.getRole());
         return dto;
+    }
+
+    private Response updateProfile(User user, String username, String password, MultipartFile avatar) {
+        if (StringUtils.hasText(username)) {
+            String login = username.trim();
+            var existing = userRepository.findByLogin(login);
+            if (existing.isPresent() && !existing.get().getId().equals(user.getId())) {
+                return Response.error("409", "User already exists");
+            }
+            user.setLogin(login);
+        }
+
+        if (avatar != null && !avatar.isEmpty()) {
+            String imageUrl = saveAvatar(avatar);
+            if (imageUrl == null) {
+                return Response.error("400", "Avatar must be an image");
+            }
+            user.setImageUrl(imageUrl);
+        }
+
+        if (StringUtils.hasText(password)) {
+            user.setPasswordHash(passwordEncoder.encode(password));
+        }
+
+        userRepository.save(user);
+        return Response.success(toDto(user));
+    }
+
+    private String saveAvatar(MultipartFile avatar) {
+        String contentType = avatar.getContentType();
+        if (contentType == null || !contentType.toLowerCase(Locale.ROOT).startsWith("image/")) {
+            return null;
+        }
+
+        String extension = getExtension(avatar.getOriginalFilename());
+        String filename = UUID.randomUUID() + extension;
+        Path directory = Path.of("uploads", "avatars").toAbsolutePath().normalize();
+        Path target = directory.resolve(filename).normalize();
+
+        try {
+            Files.createDirectories(directory);
+            avatar.transferTo(target);
+            return "/uploads/avatars/" + filename;
+        } catch (IOException e) {
+            throw new IllegalStateException("Could not save avatar", e);
+        }
+    }
+
+    private String getExtension(String filename) {
+        if (!StringUtils.hasText(filename) || !filename.contains(".")) {
+            return "";
+        }
+        String extension = filename.substring(filename.lastIndexOf(".")).toLowerCase(Locale.ROOT);
+        return extension.length() > 12 ? "" : extension;
     }
 }
