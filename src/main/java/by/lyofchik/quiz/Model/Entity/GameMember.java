@@ -16,8 +16,7 @@ public class GameMember {
     @Column(name = "member_id", nullable = false)
     private Integer id;
 
-    @MapsId
-    @JoinColumn(name = "member_id", nullable = false)
+    @Column(name = "member_id", insertable = false, updatable = false)
     private Integer users;
 
     @Column(name = "lobby_id")

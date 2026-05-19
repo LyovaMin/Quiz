@@ -5,6 +5,7 @@ import lombok.Data;
 
 @Data
 public class AnswerDTO {
+    private Integer id;
     private String text;
     @JsonProperty("isCorrect")
     private boolean isCorrect;

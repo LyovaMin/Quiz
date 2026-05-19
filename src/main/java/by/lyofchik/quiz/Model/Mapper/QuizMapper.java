@@ -16,6 +16,7 @@ public interface QuizMapper {
     @Mapping(source = "image", target = "imageUrl")
     @Mapping(source = "createdBy", target = "creator")
     @Mapping(source = "timeLimitSeconds", target = "timeLimit")
+    @Mapping(source = "public", target = "isPublic")
     @Mapping(target = "id", ignore = true)
     Quiz toQuiz(QuizRq request);
 
@@ -26,22 +27,27 @@ public interface QuizMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "question", ignore = true)
+    @Mapping(source = "correct", target = "isCorrect")
     Answer toAnswer(AnswerDTO dto);
 
 
     @Mapping(source = "imageUrl", target = "image")
     @Mapping(source = "creator", target = "createdBy")
     @Mapping(source = "timeLimit", target = "timeLimitSeconds")
+    @Mapping(source = "id", target = "id")
+    @Mapping(source = "isPublic", target = "public")
     QuizRq toQuizRq(Quiz quiz);
 
     @Mapping(source = "imageUrl", target = "image")
     QuestionDTO toQuestionDTO(Question question);
 
+    @Mapping(source = "isCorrect", target = "correct")
     AnswerDTO toAnswerDTO(Answer answer);
 
     @Mapping(source = "image", target = "imageUrl")
     @Mapping(source = "createdBy", target = "creator")
     @Mapping(source = "timeLimitSeconds", target = "timeLimit")
+    @Mapping(source = "public", target = "isPublic")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "questions", ignore = true)
     void updateQuizFromRq(QuizRq request, @MappingTarget Quiz quiz);

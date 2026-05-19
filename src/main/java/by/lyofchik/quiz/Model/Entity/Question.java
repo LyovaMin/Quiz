@@ -1,6 +1,7 @@
 package by.lyofchik.quiz.Model.Entity;
 
 import by.lyofchik.quiz.Model.Enum.Types;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NonNull;
@@ -26,6 +27,7 @@ public class Question {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id")
+    @JsonIgnore
     private Quiz quiz;
 
     @Nationalized

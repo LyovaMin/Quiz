@@ -7,6 +7,7 @@ import java.util.List;
 
 @Data
 public class QuestionDTO {
+    private Integer id;
     private String description;
     private Types type;
     private String image;
