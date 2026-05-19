@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Редактор викторины</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand">Quiz</div>
+        <a class="nav-link active" href="/quizzes">Викторины</a>
+        <a class="nav-link" href="/lobby">Лобби</a>
+    </aside>
+    <main class="content">
+        <div class="topbar">
+            <div>
+                <h1 id="form-title">Новая викторина</h1>
+                <p class="muted">Добавьте вопросы и варианты ответов.</p>
+            </div>
+            <a class="button secondary" href="/quizzes">Назад</a>
+        </div>
+        <form id="quiz-form" class="panel">
+            <label for="title">Название</label>
+            <input type="text" id="title" required>
+
+            <label for="description">Описание</label>
+            <textarea id="description"></textarea>
+
+            <label for="timeLimit">Лимит времени, сек.</label>
+            <input type="number" id="timeLimit" value="60" min="5">
+
+            <div id="questions-container">
+                <h2>Вопросы</h2>
+            </div>
+
+            <div class="actions">
+                <button type="button" id="add-q-btn" class="secondary">Добавить вопрос</button>
+                <button type="button" id="delete-btn" class="danger" style="display:none;">Удалить квиз</button>
+                <button type="submit">Сохранить</button>
+            </div>
+            <p id="form-message" class="muted"></p>
+        </form>
+    </main>
+</div>
+<script src="/js/auth.js"></script>
+<script src="/js/edit.js"></script>
+</body>
+</html>

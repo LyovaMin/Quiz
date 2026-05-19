@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="auth-page">
+<main class="auth-card">
+    <h1>Вход</h1>
+    <p class="muted">Войдите, чтобы создавать викторины и управлять лобби.</p>
+    <form id="login-form">
+        <label for="username">Логин</label>
+        <input type="text" id="username" autocomplete="username" required>
+        <label for="password">Пароль</label>
+        <input type="password" id="password" autocomplete="current-password" required>
+        <p id="auth-error" class="muted"></p>
+        <button type="submit">Войти</button>
+    </form>
+    <p class="muted">Нет аккаунта? <a href="/register">Зарегистрироваться</a></p>
+</main>
+<script src="/js/auth.js"></script>
+<script src="/js/login.js"></script>
+</body>
+</html>

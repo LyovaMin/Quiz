@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лобби</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand">Quiz</div>
+        <a class="nav-link" href="/quizzes">Викторины</a>
+        <a class="nav-link active" href="/lobby">Лобби</a>
+    </aside>
+    <main class="content">
+        <div class="topbar">
+            <div>
+                <h1>Лобби</h1>
+                <p class="muted">Доступны комнаты со статусом WAITING или STARTED.</p>
+            </div>
+            <div class="actions">
+                <span class="badge" data-current-user></span>
+                <button id="create-lobby-btn">Создать лобби</button>
+                <button class="secondary" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+        <div id="lobby-list" class="grid"></div>
+    </main>
+</div>
+
+<div id="create-lobby-modal" class="modal">
+    <div class="modal-card">
+        <h2>Новое лобби</h2>
+        <label for="quiz-dropdown">Викторина</label>
+        <select id="quiz-dropdown"></select>
+        <label for="lobby-password">Пароль</label>
+        <input id="lobby-password" type="text" placeholder="Можно оставить пустым">
+        <div class="actions">
+            <button id="save-lobby-btn">Создать</button>
+            <button class="secondary" onclick="closeCreateLobby()">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/lobby.js"></script>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Прохождение квиза</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<main class="content quiz-play">
+    <div class="topbar">
+        <div>
+            <h1 id="quiz-title">Квиз</h1>
+            <p id="quiz-progress" class="muted"></p>
+        </div>
+        <div class="actions">
+            <button id="end-lobby-quiz-btn" class="danger" style="display:none;">Завершить для всех</button>
+            <a class="button secondary" href="/lobby">Лобби</a>
+        </div>
+    </div>
+    <section id="question-container" class="panel">
+        <h2 id="question-text"></h2>
+        <div id="answer-options"></div>
+    </section>
+    <section id="quiz-result" class="panel" style="display:none;">
+        <h2>Результаты</h2>
+        <p>Правильных ответов: <strong id="correct-answers"></strong> из <strong id="total-questions"></strong>.</p>
+        <p id="score-line"></p>
+        <div id="lobby-results"></div>
+        <a class="button" href="/quizzes">К списку викторин</a>
+    </section>
+</main>
+
+<script src="/js/auth.js"></script>
+<script src="/js/ws-service.js"></script>
+<script src="/js/quiz.js"></script>
+</body>
+</html>

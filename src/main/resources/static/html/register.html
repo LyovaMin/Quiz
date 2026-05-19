@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body class="auth-page">
+<main class="auth-card">
+    <h1>Регистрация</h1>
+    <p class="muted">Создайте аккаунт для участия в викторинах.</p>
+    <form id="register-form">
+        <label for="username">Логин</label>
+        <input type="text" id="username" autocomplete="username" required>
+        <label for="password">Пароль</label>
+        <input type="password" id="password" autocomplete="new-password" required>
+        <p id="auth-error" class="muted"></p>
+        <button type="submit">Создать аккаунт</button>
+    </form>
+    <p class="muted">Уже есть аккаунт? <a href="/login">Войти</a></p>
+</main>
+<script src="/js/auth.js"></script>
+<script src="/js/register.js"></script>
+</body>
+</html>
