@@ -7,6 +7,8 @@ import org.mapstruct.Mapping;
 
 @Mapper(componentModel = "spring")
 public interface AnalyticsMapper {
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "answer", ignore = true)
     @Mapping(source = "request.attemptId", target = "attempt")
     @Mapping(source = "request.questionId", target = "question")
     @Mapping(source = "request.answer", target = "answerText")

@@ -103,6 +103,13 @@ a {
     gap: 16px;
 }
 
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr);
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
 .panel {
     padding: 18px;
 }
@@ -132,6 +139,75 @@ a {
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 14px;
+}
+
+.filters {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin: 14px 0;
+}
+
+.profile-head,
+.section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+}
+
+.profile-head {
+    justify-content: flex-start;
+}
+
+.avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--line);
+    background: #f3e8ff;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+}
+
+.stat-card {
+    min-height: 82px;
+    padding: 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #faf5ff;
+}
+
+.stat-card span {
+    display: block;
+    color: var(--muted);
+    font-size: 13px;
+    margin-bottom: 8px;
+}
+
+.stat-card strong {
+    font-size: 22px;
+}
+
+.topic-stats {
+    display: grid;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.topic-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
 }
 
 button,
@@ -323,5 +399,11 @@ label {
 
     .content {
         padding: 18px;
+    }
+
+    .dashboard-grid,
+    .filters,
+    .stats-grid {
+        grid-template-columns: 1fr;
     }
 }

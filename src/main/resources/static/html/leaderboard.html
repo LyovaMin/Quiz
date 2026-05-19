@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лидерборд</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand">Quiz</div>
+        <a class="nav-link" href="/quizzes">Викторины</a>
+        <a class="nav-link" href="/lobby">Лобби</a>
+        <a class="nav-link active" href="/leaderboard">Лидерборд</a>
+    </aside>
+    <main class="content">
+        <div class="topbar">
+            <div>
+                <h1>Лидерборд</h1>
+                <p class="muted">Топ-5 игроков по сумме баллов за квизы.</p>
+            </div>
+            <div class="actions">
+                <span class="badge" data-current-user></span>
+                <a class="button secondary" href="/profile">Кабинет</a>
+                <button class="secondary" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+
+        <section class="panel">
+            <div class="filters">
+                <select id="leaderboard-period">
+                    <option value="all">Все время</option>
+                    <option value="week">Неделя</option>
+                    <option value="day">День</option>
+                </select>
+                <select id="leaderboard-topic"></select>
+            </div>
+            <div id="main-leaderboard" class="leaderboard"></div>
+        </section>
+    </main>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/leaderboard.js"></script>
+</body>
+</html>

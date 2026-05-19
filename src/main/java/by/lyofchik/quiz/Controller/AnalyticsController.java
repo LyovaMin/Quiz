@@ -12,8 +12,9 @@ public class AnalyticsController {
     AnalyticsService analyticsService;
 
     @GetMapping("/leaderboard/global")
-    public Response leaderboardGlobal() {
-        return analyticsService.leaderboard();
+    public Response leaderboardGlobal(@RequestParam(defaultValue = "all") String period,
+                                      @RequestParam(required = false) Integer topicId) {
+        return analyticsService.leaderboard(period, topicId);
     }
 
     @GetMapping("/leaderboard/quiz/{id}")
@@ -22,7 +23,14 @@ public class AnalyticsController {
     }
 
     @GetMapping("/my-stat")
-    public Response myStat(@RequestParam String username) {
-        return analyticsService.myStat(username);
+    public Response myStat(@RequestParam String username,
+                           @RequestParam(defaultValue = "all") String period,
+                           @RequestParam(required = false) Integer topicId) {
+        return analyticsService.myStat(username, period, topicId);
+    }
+
+    @GetMapping("/topics")
+    public Response topics() {
+        return analyticsService.topics();
     }
 }

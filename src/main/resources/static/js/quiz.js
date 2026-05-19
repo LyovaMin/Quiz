@@ -7,6 +7,7 @@ let quizData = null;
 let attemptId = null;
 let currentQuestionIndex = 0;
 let correctAnswers = 0;
+let totalScore = 0;
 let questionStartedAt = null;
 let answerLocked = false;
 let lobbyData = null;
@@ -90,7 +91,8 @@ async function selectAnswer(question, answerText, isCorrect, selectedElement) {
     if (lobbyId) {
         await quizWs.publish(`/app/game/${lobbyId}/answer`, buildAnswerPayload(question, answerText));
     } else {
-        await saveQuestionStat(question, answerText);
+        const saved = await saveQuestionStat(question, answerText);
+        totalScore += Number(saved?.points || 0);
     }
 
     showNextButton();
@@ -138,10 +140,11 @@ function buildAnswerPayload(question, answerText) {
 }
 
 async function saveQuestionStat(question, answerText) {
-    await api('/ws/api/answer', {
+    const response = await api('/ws/api/answer', {
         method: 'POST',
         body: JSON.stringify(buildAnswerPayload(question, answerText))
     });
+    return response.status.startsWith('2') ? response.data : null;
 }
 
 async function showResult(pushedResults = null) {
@@ -153,7 +156,7 @@ async function showResult(pushedResults = null) {
     document.getElementById('correct-answers').textContent = correctAnswers;
     document.getElementById('total-questions').textContent = quizData.questions.length;
 
-    let score = correctAnswers;
+    let score = totalScore;
     let results = null;
     if (lobbyId) {
         results = pushedResults || await loadLobbyResults();
