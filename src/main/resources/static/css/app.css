@@ -347,6 +347,43 @@ label {
     margin: 0 auto;
 }
 
+.score-corner {
+    position: fixed;
+    top: 18px;
+    right: 18px;
+    z-index: 5;
+    min-width: 110px;
+    padding: 10px 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+    box-shadow: var(--shadow);
+    font-weight: 800;
+    text-align: center;
+}
+
+.bonus-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.bonus-button {
+    background: #ecfeff;
+    color: #164e63;
+    border: 1px solid #67e8f9;
+}
+
+.bonus-button.active {
+    background: #06b6d4;
+    color: #fff;
+}
+
+.live-scoreboard {
+    margin-top: 16px;
+}
+
 .leaderboard {
     display: grid;
     gap: 10px;

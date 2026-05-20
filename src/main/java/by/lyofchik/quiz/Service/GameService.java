@@ -89,14 +89,23 @@ public class GameService {
         }
         int points = question.getPoints() != 0 ? question.getPoints() : question.getType().getDefaultPoints();
 
-        if (request.getActiveBonus() == BonusType.BONUS_POINTS) {
-            return points + points / 2;
-        }
+        float multiplier = 1f;
         if (request.getStartedAt() == null || request.getCompletedAt() == null) {
-            return points;
+            return applyActiveBonus(points, request.getActiveBonus());
         }
         long answeredFor = Duration.between(request.getStartedAt(), request.getCompletedAt()).getSeconds();
-        return Math.round(points * Constants.getGrade(answeredFor));
+        multiplier *= Constants.getGrade(answeredFor);
+        return Math.round(applyActiveBonus(points, request.getActiveBonus()) * multiplier);
+    }
+
+    private int applyActiveBonus(int points, BonusType activeBonus) {
+        if (activeBonus == BonusType.DOUBLING) {
+            return points * 2;
+        }
+        if (activeBonus == BonusType.BONUS_POINTS) {
+            return points + points / 2;
+        }
+        return points;
     }
 
     private float countProgress(Quiz quiz){

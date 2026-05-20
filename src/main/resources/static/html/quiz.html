@@ -8,6 +8,7 @@
 </head>
 <body>
 <main class="content quiz-play">
+    <div id="score-corner" class="score-corner">0 очков</div>
     <div class="topbar">
         <div>
             <h1 id="quiz-title">Квиз</h1>
@@ -20,8 +21,10 @@
     </div>
     <section id="question-container" class="panel">
         <h2 id="question-text"></h2>
+        <div id="bonus-panel" class="bonus-panel"></div>
         <div id="answer-options"></div>
     </section>
+    <section id="live-scoreboard" class="panel live-scoreboard"></section>
     <section id="quiz-result" class="panel" style="display:none;">
         <h2>Результаты</h2>
         <p>Правильных ответов: <strong id="correct-answers"></strong> из <strong id="total-questions"></strong>.</p>
