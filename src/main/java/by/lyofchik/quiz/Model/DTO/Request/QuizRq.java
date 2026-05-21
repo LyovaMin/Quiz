@@ -19,4 +19,6 @@ public class QuizRq {
     @JsonProperty("isPublic")
     private boolean isPublic;
     private List<QuestionDTO> questions;
+    private List<Integer> topicIds;
+    private List<String> topics;
 }

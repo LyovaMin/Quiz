@@ -5,6 +5,7 @@ import by.lyofchik.quiz.Model.Entity.Topic;
 import by.lyofchik.quiz.Model.Entity.User;
 import by.lyofchik.quiz.Repository.QuestionStatRepository;
 import by.lyofchik.quiz.Repository.QuizAttemptRepository;
+import by.lyofchik.quiz.Repository.QuizzesRepository;
 import by.lyofchik.quiz.Repository.TopicRepository;
 import by.lyofchik.quiz.Repository.UserRepository;
 import lombok.AllArgsConstructor;
@@ -23,6 +24,8 @@ public class AnalyticsService {
     QuizAttemptRepository quizAttemptRepository;
     UserRepository userRepository;
     TopicRepository topicRepository;
+    QuizzesRepository quizzesRepository;
+    AuthService authService;
 
     public Response leaderboard(String period, Integer topicId) {
         Instant fromDate = resolveFromDate(period);
@@ -47,6 +50,31 @@ public class AnalyticsService {
         return Response.success(topicRepository.findAll().stream()
                 .map(this::toTopicRow)
                 .toList());
+    }
+
+    public Response quizStat(Integer quizId, User currentUser) {
+        var quiz = quizzesRepository.findById(quizId);
+        if (quiz.isEmpty()) {
+            return Response.error("404", "Quiz not found");
+        }
+        if (currentUser == null || (!authService.isAdmin(currentUser) && !quiz.get().getCreator().equals(currentUser.getId()))) {
+            return Response.error("403", "Only quiz creator or admin can view analytics");
+        }
+
+        Object[] stats = normalizeStats(questionStatRepository.getQuizAnswerStats(quizId));
+        long total = toLong(stats[0]);
+        long correct = toLong(stats[1]);
+        return Response.success(Map.of(
+                "quizId", quizId,
+                "title", quiz.get().getTitle(),
+                "attempts", quizAttemptRepository.countByQuizAndCompletedAtIsNotNull(quizId),
+                "totalAnswers", total,
+                "correctAnswers", correct,
+                "correctPercent", total == 0 ? 0 : Math.round((correct * 1000.0) / total) / 10.0,
+                "questions", questionStatRepository.getQuizQuestionStats(quizId).stream()
+                        .map(this::toQuestionStatRow)
+                        .toList()
+        ));
     }
 
     private Map<String, Object> buildProfile(User user, String period, Integer topicId) {
@@ -106,6 +134,18 @@ public class AnalyticsService {
         return Map.of(
                 "topicId", row[0],
                 "topic", row[1].toString(),
+                "totalAnswers", total,
+                "correctAnswers", correct,
+                "correctPercent", total == 0 ? 0 : Math.round((correct * 1000.0) / total) / 10.0
+        );
+    }
+
+    private Map<String, Object> toQuestionStatRow(Object[] row) {
+        long total = toLong(row[2]);
+        long correct = toLong(row[3]);
+        return Map.of(
+                "questionId", row[0],
+                "description", row[1],
                 "totalAnswers", total,
                 "correctAnswers", correct,
                 "correctPercent", total == 0 ? 0 : Math.round((correct * 1000.0) / total) / 10.0

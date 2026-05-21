@@ -1,10 +1,12 @@
 const params = new URLSearchParams(window.location.search);
 const quizId = params.get('id');
 let me = null;
+let topics = [];
 
 async function initEditor() {
     me = await requireUser();
     if (!me) return;
+    await loadTopics();
     document.getElementById('add-q-btn').onclick = () => addQuestionUI();
     document.getElementById('quiz-form').onsubmit = saveQuiz;
     document.getElementById('delete-btn').onclick = deleteQuiz;
@@ -17,6 +19,17 @@ async function initEditor() {
     } else {
         addQuestionUI();
     }
+}
+
+async function loadTopics() {
+    const response = await api('/analitics/topics');
+    topics = response.status.startsWith('2') ? response.data || [] : [];
+    document.getElementById('topic-options').innerHTML = topics.map(topic => `
+        <label class="topic-check">
+            <input type="checkbox" value="${topic.id}" style="width:auto;min-height:auto;">
+            ${escapeHtml(topic.name)}
+        </label>
+    `).join('');
 }
 
 function addQuestionUI(data = null) {
@@ -69,17 +82,28 @@ function addAnswerUI(container, data = null) {
 function fillForm(quiz) {
     document.getElementById('title').value = quiz.title || '';
     document.getElementById('description').value = quiz.description || '';
-    document.getElementById('timeLimit').value = quiz.timeLimit || 60;
+    document.getElementById('timeLimit').value = quiz.timeLimitSeconds || quiz.timeLimit || 60;
+    (quiz.topicIds || []).forEach(topicId => {
+        const input = document.querySelector(`#topic-options input[value="${topicId}"]`);
+        if (input) input.checked = true;
+    });
     (quiz.questions || []).forEach(q => addQuestionUI(q));
 }
 
 async function saveQuiz(e) {
     e.preventDefault();
+    const topicIds = Array.from(document.querySelectorAll('#topic-options input:checked')).map(input => Number(input.value));
+    if (topicIds.length < 1 || topicIds.length > 3) {
+        document.getElementById('form-message').textContent = 'Выберите от 1 до 3 тем.';
+        return;
+    }
+
     const payload = {
         title: document.getElementById('title').value,
         description: document.getElementById('description').value,
         timeLimitSeconds: Number(document.getElementById('timeLimit').value) || 60,
         isPublic: true,
+        topicIds,
         questions: Array.from(document.querySelectorAll('.question-block')).map(q => ({
             description: q.querySelector('.q-desc').value,
             points: Number(q.querySelector('.q-points').value) || 0,

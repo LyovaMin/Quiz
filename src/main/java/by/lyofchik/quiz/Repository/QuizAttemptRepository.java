@@ -46,4 +46,6 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Intege
     Long getUserScore(@Param("userId") Integer userId,
                       @Param("fromDate") Instant fromDate,
                       @Param("topicId") Integer topicId);
+
+    long countByQuizAndCompletedAtIsNotNull(Integer quiz);
 }

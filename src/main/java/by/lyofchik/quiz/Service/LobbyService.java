@@ -39,7 +39,10 @@ public class LobbyService {
 
     public Response lobbies(LobbiesRq request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
-        var page = lobbyRepository.findByStatusIn(List.of(LobbyStatus.WAITING, LobbyStatus.STARTED), pageable);
+        var statuses = List.of(LobbyStatus.WAITING, LobbyStatus.STARTED);
+        var page = request.getId() == null
+                ? lobbyRepository.findByStatusIn(statuses, pageable)
+                : lobbyRepository.findByIdAndStatusIn(request.getId(), statuses, pageable);
         return Response.success(page);
     }
 
@@ -79,6 +82,7 @@ public class LobbyService {
         lobby.setHost(currentUser.getId());
         lobby.setQuiz(quiz.get());
         lobby.setPassword(request.getPassword());
+        lobby.setMaxPlayers(normalizeMaxPlayers(request.getMaxPlayers()));
         lobby.setStatus(LobbyStatus.WAITING);
         lobbyRepository.save(lobby);
 
@@ -133,6 +137,11 @@ public class LobbyService {
         }
         if (lobby.getStatus() == LobbyStatus.ENDED) {
             return Response.error("400", "Lobby is closed");
+        }
+        if (!gameMemberRepository.existsByLobbyAndId(lobbyId, currentUser.getId())
+                && lobby.getMaxPlayers() != null
+                && gameMemberRepository.findByLobbyOrderByScoreDesc(lobbyId).size() >= lobby.getMaxPlayers()) {
+            return Response.error("400", "Lobby is full");
         }
         if (lobby.getPassword() != null && !lobby.getPassword().isBlank() && !lobby.getPassword().equals(password)) {
             return Response.error("403", "Incorrect lobby password");
@@ -226,5 +235,12 @@ public class LobbyService {
 
     private boolean canManage(Lobby lobby, User currentUser) {
         return currentUser != null && (authService.isAdmin(currentUser) || lobby.getHost().equals(currentUser.getId()));
+    }
+
+    private Integer normalizeMaxPlayers(Integer maxPlayers) {
+        if (maxPlayers == null || maxPlayers < 2) {
+            return null;
+        }
+        return Math.min(maxPlayers, 50);
     }
 }

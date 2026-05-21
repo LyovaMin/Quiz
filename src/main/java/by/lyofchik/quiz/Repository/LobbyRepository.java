@@ -14,4 +14,6 @@ public interface LobbyRepository extends JpaRepository<Lobby, Integer> {
     Lobby findById(int id);
 
     Page<Lobby> findByStatusIn(Collection<LobbyStatus> statuses, Pageable pageable);
+
+    Page<Lobby> findByIdAndStatusIn(Integer id, Collection<LobbyStatus> statuses, Pageable pageable);
 }

@@ -42,4 +42,26 @@ public interface QuestionStatRepository extends JpaRepository<QuestionStat, Inte
             """)
     List<Object[]> getUserAnswerStatsByTopic(@Param("userId") Integer userId,
                                              @Param("fromDate") Instant fromDate);
+
+    @Query("""
+            SELECT q.id, q.description,
+                   COUNT(qs.id),
+                   SUM(CASE WHEN qs.isCorrect = true THEN 1 ELSE 0 END)
+            FROM QuestionStat qs
+            JOIN Question q ON q.id = qs.question
+            JOIN QuizAttempt qa ON qa.id = qs.attempt
+            WHERE qa.quiz = :quizId
+            GROUP BY q.id, q.description
+            ORDER BY q.id
+            """)
+    List<Object[]> getQuizQuestionStats(@Param("quizId") Integer quizId);
+
+    @Query("""
+            SELECT COUNT(qs.id),
+                   SUM(CASE WHEN qs.isCorrect = true THEN 1 ELSE 0 END)
+            FROM QuestionStat qs
+            JOIN QuizAttempt qa ON qa.id = qs.attempt
+            WHERE qa.quiz = :quizId
+            """)
+    Object[] getQuizAnswerStats(@Param("quizId") Integer quizId);
 }

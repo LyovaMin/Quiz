@@ -36,6 +36,8 @@ public interface QuizMapper {
     @Mapping(source = "timeLimit", target = "timeLimitSeconds")
     @Mapping(source = "id", target = "id")
     @Mapping(source = "isPublic", target = "public")
+    @Mapping(target = "topicIds", ignore = true)
+    @Mapping(target = "topics", ignore = true)
     QuizRq toQuizRq(Quiz quiz);
 
     @Mapping(source = "imageUrl", target = "image")

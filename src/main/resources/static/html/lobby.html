@@ -27,6 +27,10 @@
                 <button class="secondary" onclick="logout()">Выйти</button>
             </div>
         </div>
+        <section class="panel filters">
+            <input id="lobby-id-search" type="number" min="1" placeholder="Поиск лобби по ID">
+            <button id="lobby-search-btn" type="button" class="secondary">Найти</button>
+        </section>
         <div id="lobby-list" class="grid"></div>
     </main>
 </div>
@@ -38,6 +42,8 @@
         <select id="quiz-dropdown"></select>
         <label for="lobby-password">Пароль</label>
         <input id="lobby-password" type="text" placeholder="Можно оставить пустым">
+        <label for="lobby-max-players">Максимум участников</label>
+        <input id="lobby-max-players" type="number" min="2" max="50" placeholder="Без ограничения">
         <div class="actions">
             <button id="save-lobby-btn">Создать</button>
             <button class="secondary" onclick="closeCreateLobby()">Отмена</button>

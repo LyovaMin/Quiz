@@ -6,4 +6,5 @@ import lombok.Data;
 public class LobbiesRq {
     int size;
     int page;
+    Integer id;
 }

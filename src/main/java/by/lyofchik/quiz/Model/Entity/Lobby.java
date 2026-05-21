@@ -35,6 +35,9 @@ public class Lobby {
     @Column(name = "host_id")
     private Integer host;
 
+    @Column(name = "max_players")
+    private Integer maxPlayers;
+
     @OneToMany
     @JoinColumn(name = "lobby_id")
     private Set<GameMember> gameMembers = new LinkedHashSet<>();

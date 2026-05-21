@@ -7,4 +7,5 @@ public class LobbyRq {
     private int creator;
     private int quiz;
     private String password;
+    private Integer maxPlayers;
 }

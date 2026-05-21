@@ -207,6 +207,23 @@ a {
     margin-top: 12px;
 }
 
+.topic-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.topic-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    padding: 8px 10px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+}
+
 .topic-row {
     display: flex;
     justify-content: space-between;

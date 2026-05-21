@@ -1,7 +1,9 @@
 package by.lyofchik.quiz.Controller;
 
 import by.lyofchik.quiz.Model.DTO.Response.Response;
+import by.lyofchik.quiz.Service.AuthService;
 import by.lyofchik.quiz.Service.AnalyticsService;
+import jakarta.servlet.http.HttpSession;
 import lombok.AllArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 @AllArgsConstructor
 public class AnalyticsController {
     AnalyticsService analyticsService;
+    AuthService authService;
 
     @GetMapping("/leaderboard/global")
     public Response leaderboardGlobal(@RequestParam(defaultValue = "all") String period,
@@ -32,5 +35,10 @@ public class AnalyticsController {
     @GetMapping("/topics")
     public Response topics() {
         return analyticsService.topics();
+    }
+
+    @GetMapping("/quiz/{id}")
+    public Response quizStat(@PathVariable Integer id, HttpSession session) {
+        return analyticsService.quizStat(id, authService.currentUserOrNull(session));
     }
 }
