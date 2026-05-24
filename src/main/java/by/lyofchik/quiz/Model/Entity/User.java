@@ -1,10 +1,14 @@
 package by.lyofchik.quiz.Model.Entity;
 
 import by.lyofchik.quiz.Model.Enum.Role;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
+
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -31,4 +35,8 @@ public class User {
     @Nationalized
     @Column(name = "role", length = 20)
     private Role role;
+
+    @OneToMany(mappedBy = "creator", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private Set<Quiz> quizzes = new LinkedHashSet<>();
 }

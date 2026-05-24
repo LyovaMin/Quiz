@@ -6,6 +6,7 @@ import by.lyofchik.quiz.Model.Entity.Quiz;
 import by.lyofchik.quiz.Model.Entity.QuizTopic;
 import by.lyofchik.quiz.Model.Entity.QuizTopicId;
 import by.lyofchik.quiz.Model.Entity.User;
+import by.lyofchik.quiz.Model.Enum.Type;
 import by.lyofchik.quiz.Model.Mapper.QuizMapper;
 import by.lyofchik.quiz.Repository.QuizTopicRepository;
 import by.lyofchik.quiz.Repository.QuizzesRepository;
@@ -29,6 +30,9 @@ public class ModificationService {
     public Response createQuiz(QuizRq request, User currentUser) {
         if (currentUser == null) {
             return Response.error("401", "Login required");
+        }
+        if (Type.valueOf(request.getType()) == Type.POLL && request.getQuestions().size() != 1) {
+            return Response.error("400", "Poll can only have one question");
         }
         try {
             Response topicValidation = validateTopics(request);
@@ -68,11 +72,14 @@ public class ModificationService {
         if (!canManage(quiz, currentUser)) {
             return Response.error("403", "You are not the creator of this quiz");
         }
+        if (Type.valueOf(request.getType()) == Type.POLL && request.getQuestions().size() != 1) {
+            return Response.error("400", "Poll can only have one question");
+        }
         Response topicValidation = validateTopics(request);
         if (!topicValidation.getStatus().startsWith("2")) {
             return topicValidation;
         }
-        request.setCreatedBy(quiz.getCreator());
+        request.setCreatedBy(quiz.getCreator().getId());
         quizMapper.updateQuizFromRq(request, quiz);
         quiz.getQuestions().clear();
         Quiz incoming = quizMapper.toQuiz(request);
@@ -116,6 +123,6 @@ public class ModificationService {
     }
 
     private boolean canManage(Quiz quiz, User currentUser) {
-        return currentUser != null && (authService.isAdmin(currentUser) || quiz.getCreator().equals(currentUser.getId()));
+        return currentUser != null && (authService.isAdmin(currentUser) || quiz.getCreator().getId().equals(currentUser.getId()));
     }
 }

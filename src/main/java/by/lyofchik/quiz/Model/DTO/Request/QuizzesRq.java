@@ -8,4 +8,5 @@ public class QuizzesRq {
     private int page;
     private String search;
     private Integer topicId;
+    private String type;
 }

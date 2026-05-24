@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опрос</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand">Quiz</div>
+        <a class="nav-link" href="/quizzes">Викторины</a>
+        <a class="nav-link active" href="/polls">Опросы</a>
+        <a class="nav-link" href="/lobby">Лобби</a>
+        <a class="nav-link" href="/leaderboard">Лидерборд</a>
+    </aside>
+    <main class="content">
+        <div id="poll-container">
+            <h1 id="poll-title"></h1>
+            <p id="poll-description"></p>
+            <div id="poll-options"></div>
+        </div>
+        <div id="results-container" style="display: none;">
+            <h2>Результаты</h2>
+            <div id="results-chart"></div>
+        </div>
+    </main>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/poll.js"></script>
+</body>
+</html>

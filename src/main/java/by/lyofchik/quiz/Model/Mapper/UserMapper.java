@@ -1,18 +1,24 @@
 package by.lyofchik.quiz.Model.Mapper;
 
-import by.lyofchik.quiz.Model.DTO.UserDTO;
 import by.lyofchik.quiz.Model.Entity.User;
+import by.lyofchik.quiz.Repository.UserRepository;
 import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
+import org.springframework.beans.factory.annotation.Autowired;
 
-@Mapper
-public interface UserMapper {
-//    @Mapping(source = "name", target = "login")
-//    @Mapping(source = "image", target = "imageUrl")
-//    @Mapping(target = "passwordHash", ignore = true)
-//    User toEntity(UserDTO userDTO);
-//
-//    @Mapping(source = "login", target = "name")
-//    @Mapping(source = "imageUrl", target = "image")
-//    UserDTO toDTO(User user);
+@Mapper(componentModel = "spring")
+public abstract class UserMapper {
+
+    @Autowired
+    protected UserRepository userRepository;
+
+    public User toUser(Integer id) {
+        if (id == null) {
+            return null;
+        }
+        return userRepository.findById(id).orElse(null);
+    }
+
+    public Integer toId(User user) {
+        return user != null ? user.getId() : null;
+    }
 }

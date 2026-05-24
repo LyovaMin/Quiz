@@ -1,6 +1,7 @@
 package by.lyofchik.quiz.Repository;
 
 import by.lyofchik.quiz.Model.Entity.Quiz;
+import by.lyofchik.quiz.Model.Enum.Type;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -21,8 +22,10 @@ public interface QuizzesRepository extends JpaRepository<Quiz, Integer> {
                     SELECT qt.id FROM QuizTopic qt
                     WHERE qt.quiz = q.id AND qt.topic.id = :topicId
               ))
+              AND (:type IS NULL OR q.type = :type)
             """)
     Page<Quiz> search(@Param("search") String search,
                       @Param("topicId") Integer topicId,
+                      @Param("type") Type type,
                       Pageable pageable);
 }

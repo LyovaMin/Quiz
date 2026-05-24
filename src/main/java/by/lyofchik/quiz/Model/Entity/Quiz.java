@@ -1,5 +1,6 @@
 package by.lyofchik.quiz.Model.Entity;
 
+import by.lyofchik.quiz.Model.Enum.Type;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NonNull;
@@ -32,8 +33,9 @@ public class Quiz {
     @Column(name = "image_url", length = 512)
     private String imageUrl;
 
-    @Column(name = "creator_id")
-    private Integer creator;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "creator_id")
+    private User creator;
 
     @Column(name = "created_at")
     private Instant createdAt;
@@ -43,6 +45,10 @@ public class Quiz {
 
     @Column(name = "time_limit")
     private Integer timeLimit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "type")
+    private Type type;
 
     @NonNull
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -27,4 +27,7 @@ public class Answer {
 
     @Column(name = "is_correct")
     private Boolean isCorrect;
+
+    @Column(name = "votes")
+    private Integer votes = 0;
 }

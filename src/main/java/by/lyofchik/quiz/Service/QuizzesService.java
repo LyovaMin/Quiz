@@ -3,35 +3,31 @@ package by.lyofchik.quiz.Service;
 import by.lyofchik.quiz.Model.DTO.Request.QuizRq;
 import by.lyofchik.quiz.Model.DTO.Request.QuizzesRq;
 import by.lyofchik.quiz.Model.DTO.Response.Response;
-import by.lyofchik.quiz.Model.Entity.Answer;
-import by.lyofchik.quiz.Model.Entity.Question;
 import by.lyofchik.quiz.Model.Entity.Quiz;
-import by.lyofchik.quiz.Model.Entity.QuizTopic;
+import by.lyofchik.quiz.Model.Enum.Type;
 import by.lyofchik.quiz.Model.Mapper.QuizMapper;
 import by.lyofchik.quiz.Repository.QuizTopicRepository;
 import by.lyofchik.quiz.Repository.QuizzesRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @Service
 @AllArgsConstructor
 public class QuizzesService {
-    QuizzesRepository quizzesRepository;
-    QuizTopicRepository quizTopicRepository;
-    QuizMapper quizMapper;
+    private final QuizzesRepository quizzesRepository;
+    private final QuizTopicRepository quizTopicRepository;
+    private final QuizMapper quizMapper;
 
     public Response allQuizzes(QuizzesRq request) {
         Pageable pageable = PageRequest.of(request.getPage(), request.getSize());
+        Type type = request.getType() != null ? Type.valueOf(request.getType()) : null;
+
         return Response.success(quizzesRepository
-                .search(request.getSearch(), request.getTopicId(), pageable)
+                .search(request.getSearch(), request.getTopicId(), type, pageable)
                 .map(this::toQuizRqWithTopics));
     }
 

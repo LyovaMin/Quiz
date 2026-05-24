@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Опросы</title>
+    <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+<div class="shell">
+    <aside class="sidebar">
+        <div class="brand">Quiz</div>
+        <a class="nav-link" href="/quizzes">Викторины</a>
+        <a class="nav-link active" href="/polls">Опросы</a>
+        <a class="nav-link" href="/lobby">Лобби</a>
+        <a class="nav-link" href="/leaderboard">Лидерборд</a>
+    </aside>
+    <main class="content">
+        <div class="topbar">
+            <div>
+                <h1>Опросы</h1>
+                <p class="muted">Участвуйте в опросах и смотрите результаты.</p>
+            </div>
+            <div class="actions">
+                <span class="badge" data-current-user></span>
+                <a class="button secondary" href="/profile">Кабинет</a>
+                <a class="button" href="/quizzes/edit?type=POLL">Создать опрос</a>
+                <button class="secondary" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+        <div id="poll-list" class="grid"></div>
+    </main>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/polls.js"></script>
+</body>
+</html>

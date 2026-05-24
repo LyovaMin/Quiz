@@ -1,5 +1,6 @@
 const params = new URLSearchParams(window.location.search);
 const quizId = params.get('id');
+const type = params.get('type') || 'QUIZ';
 let me = null;
 let topics = [];
 
@@ -12,12 +13,17 @@ async function initEditor() {
     document.getElementById('delete-btn').onclick = deleteQuiz;
 
     if (quizId) {
-        document.getElementById('form-title').textContent = 'Редактирование викторины';
+        document.getElementById('form-title').textContent = 'Редактирование';
         document.getElementById('delete-btn').style.display = 'inline-flex';
         const result = await api(`/quizzes/api/${quizId}`);
         fillForm(result.data);
     } else {
+        document.getElementById('form-title').textContent = type === 'POLL' ? 'Новый опрос' : 'Новый квиз';
         addQuestionUI();
+    }
+
+    if (type === 'POLL') {
+        document.getElementById('add-q-btn').style.display = 'none';
     }
 }
 
@@ -34,6 +40,9 @@ async function loadTopics() {
 
 function addQuestionUI(data = null) {
     const container = document.getElementById('questions-container');
+    if (type === 'POLL' && container.children.length > 0) {
+        return;
+    }
     const qDiv = document.createElement('section');
     qDiv.className = 'question-block';
     qDiv.innerHTML = `
@@ -103,6 +112,7 @@ async function saveQuiz(e) {
         description: document.getElementById('description').value,
         timeLimitSeconds: Number(document.getElementById('timeLimit').value) || 60,
         isPublic: true,
+        type: type,
         topicIds,
         questions: Array.from(document.querySelectorAll('.question-block')).map(q => ({
             description: q.querySelector('.q-desc').value,
@@ -119,15 +129,21 @@ async function saveQuiz(e) {
         method: 'POST',
         body: JSON.stringify(payload)
     });
-    if (result.status.startsWith('2')) window.location.href = '/quizzes';
-    else document.getElementById('form-message').textContent = result.message;
+    if (result.status.startsWith('2')) {
+        window.location.href = type === 'POLL' ? '/polls' : '/quizzes';
+    } else {
+        document.getElementById('form-message').textContent = result.message;
+    }
 }
 
 async function deleteQuiz() {
-    if (!confirm('Удалить викторину?')) return;
+    if (!confirm('Удалить?')) return;
     const result = await api(`/quizzes/api/delete/${quizId}`, { method: 'DELETE' });
-    if (result.status.startsWith('2')) window.location.href = '/quizzes';
-    else document.getElementById('form-message').textContent = result.message;
+    if (result.status.startsWith('2')) {
+        window.location.href = type === 'POLL' ? '/polls' : '/quizzes';
+    } else {
+        document.getElementById('form-message').textContent = result.message;
+    }
 }
 
 window.onload = initEditor;

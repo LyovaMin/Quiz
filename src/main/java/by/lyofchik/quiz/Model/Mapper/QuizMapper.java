@@ -11,12 +11,13 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.MappingTarget;
 
-@Mapper(componentModel = "spring")
+@Mapper(componentModel = "spring", uses = UserMapper.class)
 public interface QuizMapper {
     @Mapping(source = "image", target = "imageUrl")
     @Mapping(source = "createdBy", target = "creator")
     @Mapping(source = "timeLimitSeconds", target = "timeLimit")
     @Mapping(source = "public", target = "isPublic")
+    @Mapping(source = "type", target = "type")
     @Mapping(target = "id", ignore = true)
     Quiz toQuiz(QuizRq request);
 
@@ -28,8 +29,8 @@ public interface QuizMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "question", ignore = true)
     @Mapping(source = "correct", target = "isCorrect")
+    @Mapping(target = "votes", ignore = true)
     Answer toAnswer(AnswerDTO dto);
-
 
     @Mapping(source = "imageUrl", target = "image")
     @Mapping(source = "creator", target = "createdBy")
@@ -50,15 +51,20 @@ public interface QuizMapper {
     @Mapping(source = "createdBy", target = "creator")
     @Mapping(source = "timeLimitSeconds", target = "timeLimit")
     @Mapping(source = "public", target = "isPublic")
+    @Mapping(source = "type", target = "type")
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "questions", ignore = true)
     void updateQuizFromRq(QuizRq request, @MappingTarget Quiz quiz);
 
     @AfterMapping
     default void linkRelations(@MappingTarget Quiz quiz) {
-        quiz.getQuestions().forEach(question -> {
-            question.setQuiz(quiz);
-            question.getAnswers().forEach(answer -> answer.setQuestion(question));
-        });
+        if (quiz.getQuestions() != null) {
+            quiz.getQuestions().forEach(question -> {
+                question.setQuiz(quiz);
+                if (question.getAnswers() != null) {
+                    question.getAnswers().forEach(answer -> answer.setQuestion(question));
+                }
+            });
+        }
     }
 }

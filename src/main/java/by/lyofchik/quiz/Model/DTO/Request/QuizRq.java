@@ -18,6 +18,7 @@ public class QuizRq {
     private int timeLimitSeconds;
     @JsonProperty("isPublic")
     private boolean isPublic;
+    private String type; // ????????? ???? type
     private List<QuestionDTO> questions;
     private List<Integer> topicIds;
     private List<String> topics;

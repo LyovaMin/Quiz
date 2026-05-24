@@ -12,7 +12,7 @@ spring:
     database-platform: org.hibernate.dialect.SQLServerDialect
     show-sql: true
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
   thymeleaf:
     encoding: UTF-8
 
