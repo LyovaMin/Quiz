@@ -28,6 +28,7 @@ async function loadLeaderboard() {
     document.getElementById('main-leaderboard').innerHTML = rows.map((row, index) => `
         <div class="leaderboard-row ${row.userId === me.id ? 'me' : ''}">
             <span class="place">#${index + 1}</span>
+            <img src="${row.avatar || ''}" alt="avatar" class="avatar">
             <span>${escapeHtml(row.login)}</span>
             <strong>${row.score} очков</strong>
         </div>

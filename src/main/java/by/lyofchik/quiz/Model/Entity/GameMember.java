@@ -1,5 +1,6 @@
 package by.lyofchik.quiz.Model.Entity;
 
+import by.lyofchik.quiz.Model.Enum.BonusType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,5 +34,7 @@ public class GameMember {
     @Column(name = "last_update")
     private Instant lastUpdate;
 
-
+    @Enumerated(EnumType.STRING)
+    @Column(name = "available_bonus")
+    private BonusType availableBonus;
 }

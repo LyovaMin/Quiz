@@ -45,7 +45,7 @@ public class ModificationService {
             Quiz newQuiz = quizMapper.toQuiz(request);
             log.info("QuizzesController.createQuiz - {}", newQuiz);
             quizzesRepository.save(newQuiz);
-            saveTopics(newQuiz.getId(), request.getTopicIds());
+            saveTopics(newQuiz, request.getTopicIds());
             return Response.success();
         }  catch (Exception e) {
             log.error(e.getMessage());
@@ -68,12 +68,15 @@ public class ModificationService {
     }
 
     public Response updateQuiz(int id, QuizRq request, User currentUser) {
+        log.info("Updating quiz {} with data: {}", id, request);
         var optionalQuiz = quizzesRepository.findById(id);
         if (optionalQuiz.isEmpty()) {
+            log.error("Quiz with id {} not found for update.", id);
             return Response.error("404", "Quiz not found");
         }
         var quiz = optionalQuiz.get();
         if (!canManage(quiz, currentUser)) {
+            log.warn("User {} attempted to update quiz {} without permission.", currentUser.getId(), id);
             return Response.error("403", "You are not the creator of this quiz");
         }
         if (Type.valueOf(request.getType()) == Type.POLL && request.getQuestions().size() != 1) {
@@ -81,19 +84,29 @@ public class ModificationService {
         }
         Response topicValidation = validateTopics(request);
         if (!topicValidation.getStatus().startsWith("2")) {
+            log.warn("Topic validation failed for quiz {}: {}", id, topicValidation.getMessage());
             return topicValidation;
         }
-        request.setCreatedBy(quiz.getCreator().getId());
-        quizMapper.updateQuizFromRq(request, quiz);
+
+        quiz.setTitle(request.getTitle());
+        quiz.setDescription(request.getDescription());
+        quiz.setTimeLimit(request.getTimeLimitSeconds());
+        quiz.setIsPublic(request.isPublic());
+        quiz.setType(Type.valueOf(request.getType()));
+
+        Quiz tempQuiz = quizMapper.toQuiz(request);
         quiz.getQuestions().clear();
-        Quiz incoming = quizMapper.toQuiz(request);
-        incoming.getQuestions().forEach(question -> {
+        quiz.getQuestions().addAll(tempQuiz.getQuestions());
+        
+        quiz.getQuestions().forEach(question -> {
             question.setQuiz(quiz);
             question.getAnswers().forEach(answer -> answer.setQuestion(question));
-            quiz.getQuestions().add(question);
         });
-        quizzesRepository.save(quiz);
-        saveTopics(quiz.getId(), request.getTopicIds());
+
+        Quiz updatedQuiz = quizzesRepository.save(quiz);
+        saveTopics(updatedQuiz, request.getTopicIds());
+        
+        log.info("Successfully updated quiz {}", id);
         return Response.success();
     }
 
@@ -105,28 +118,39 @@ public class ModificationService {
         if (distinctTopicIds.size() > 3) {
             return Response.error("400", "Choose no more than 3 topics");
         }
-        if (topicRepository.findAllById(distinctTopicIds).size() != distinctTopicIds.size()) {
-            return Response.error("400", "Unknown topic");
+        for (Integer topicId : distinctTopicIds) {
+            if (topicId == null) {
+                log.error("Received null topicId in the list: {}", request.getTopicIds());
+                return Response.error("400", "Topic ID cannot be null.");
+            }
+            if (!topicRepository.existsById(topicId)) {
+                log.error("Topic with id {} does not exist.", topicId);
+                return Response.error("400", "Unknown topic with id: " + topicId);
+            }
         }
         request.setTopicIds(distinctTopicIds);
         return Response.success();
     }
 
-    private void saveTopics(Integer quizId, java.util.List<Integer> topicIds) {
-        var quizOpt = quizzesRepository.findById(quizId);
-        if (quizOpt.isEmpty()) return;
-        Quiz quiz = quizOpt.get();
+    private void saveTopics(Quiz quiz, java.util.List<Integer> topicIds) {
+        log.info("Saving topics for quiz {}: {}", quiz.getId(), topicIds);
         quizTopicRepository.deleteByQuiz(quiz);
-        topicIds.forEach(topicId -> topicRepository.findById(topicId).ifPresent(topic -> {
-            QuizTopic quizTopic = new QuizTopic();
-            QuizTopicId id = new QuizTopicId();
-            id.setQuizId(quizId);
-            id.setTopicId(topicId);
-            quizTopic.setId(id);
-            quizTopic.setQuiz(quiz);
-            quizTopic.setTopic(topic);
-            quizTopicRepository.save(quizTopic);
-        }));
+        topicIds.forEach(topicId -> {
+            if (topicId == null) {
+                log.error("Attempted to save a null topicId for quiz {}", quiz.getId());
+                return;
+            }
+            topicRepository.findById(topicId).ifPresent(topic -> {
+                QuizTopic quizTopic = new QuizTopic();
+                QuizTopicId id = new QuizTopicId();
+                id.setQuizId(quiz.getId());
+                id.setTopicId(topicId);
+                quizTopic.setId(id);
+                quizTopic.setQuiz(quiz);
+                quizTopic.setTopic(topic);
+                quizTopicRepository.save(quizTopic);
+            });
+        });
     }
 
     private boolean canManage(Quiz quiz, User currentUser) {

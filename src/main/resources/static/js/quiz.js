@@ -12,8 +12,8 @@ let questionStartedAt = null;
 let answerLocked = false;
 let lobbyData = null;
 let resultShown = false;
-let bonusQuestionIndexes = new Set();
-let activeBonus = null;
+let availableBonus = null; // Здесь будет храниться выпавший бонус
+let usedBonus = null; // Бонус, который игрок решил использовать на текущем вопросе
 let liveScores = [];
 
 // timer
@@ -28,14 +28,12 @@ async function startQuiz() {
     const result = await api(`/quizzes/api/${quizId}`);
     quizData = result.data;
     document.getElementById('quiz-title').textContent = quizData.title;
-    bonusQuestionIndexes = buildBonusQuestionIndexes(quizData.questions?.length || 0);
     updateLiveMember({ userId: me.id, username: me.name, score: 0, progress: 0 });
 
     if (lobbyId) {
         await initLobbyMode();
     }
 
-    // if we are coming to see results only (re-entering a lobby after finishing), show results and skip starting a new attempt
     if (query.get('showResults') === 'true' && lobbyId) {
         const results = await loadLobbyResults();
         await showResult(results);
@@ -49,9 +47,7 @@ async function startQuiz() {
     attemptId = attempt.data?.id;
     attemptStartedAt = attempt.data?.startedAt || new Date().toISOString();
 
-    // start countdown timer
     startCountdown();
-
     displayQuestion();
 }
 
@@ -63,7 +59,6 @@ async function initLobbyMode() {
     endButton.style.display = isHost ? 'inline-flex' : 'none';
     endButton.onclick = endQuizForLobby;
 
-    // start countdown using lobby start if present
     if (lobbyData && lobbyData.startedAt) {
         attemptStartedAt = lobbyData.startedAt;
         startCountdown();
@@ -74,7 +69,12 @@ async function initLobbyMode() {
     });
     await quizWs.subscribe(`/topic/game/${lobbyId}/result`, (response) => {
         if (response?.status?.startsWith('2') && response.data) {
-            updateLiveMember(response.data);
+            const memberData = response.data.member;
+            if (memberData.id === me.id) {
+                availableBonus = memberData.availableBonus;
+                renderAvailableBonus();
+            }
+            updateLiveMember(memberData);
         }
     });
 
@@ -86,11 +86,11 @@ function displayQuestion() {
     const question = quizData.questions[currentQuestionIndex];
     questionStartedAt = new Date();
     answerLocked = false;
-    activeBonus = null;
+    usedBonus = null; // Сбрасываем использованный бонус для нового вопроса
     document.getElementById('quiz-progress').textContent = `Вопрос ${currentQuestionIndex + 1} из ${quizData.questions.length}`;
     document.getElementById('question-text').textContent = question.description;
 
-    renderBonuses(question);
+    renderAvailableBonus();
 
     const answerOptions = document.getElementById('answer-options');
     answerOptions.innerHTML = '';
@@ -101,13 +101,14 @@ function displayQuestion() {
             button.className = 'answer-option';
             button.textContent = answer.text;
             button.dataset.correct = String(answer.isCorrect);
-            button.onclick = () => selectAnswer(question, answer.text, answer.isCorrect, button);
+            button.onclick = () => selectAnswer(question, answer.text, button);
             answerOptions.appendChild(button);
         });
     } else {
         const input = document.createElement('input');
         input.type = 'text';
         input.placeholder = 'Введите ответ';
+        input.className = 'answer-input'; // Добавим класс для стилизации
         answerOptions.appendChild(input);
 
         const submitButton = document.createElement('button');
@@ -116,20 +117,27 @@ function displayQuestion() {
         submitButton.onclick = () => {
             const expected = question.answers?.[0]?.text || '';
             const correct = input.value.trim().toLowerCase() === expected.trim().toLowerCase();
-            selectAnswer(question, input.value, correct, submitButton);
+            // Для текстового ответа у нас нет конкретного элемента, так что передаем null
+            selectAnswer(question, input.value, null, correct);
         };
         answerOptions.appendChild(submitButton);
     }
 }
 
-async function selectAnswer(question, answerText, isCorrect, selectedElement) {
+async function selectAnswer(question, answerText, selectedElement, isCorrectOverride = null) {
     if (answerLocked) return;
     answerLocked = true;
+    
+    // Если isCorrectOverride передан (для текстового поля), используем его. Иначе, берем из dataset.
+    const isCorrect = isCorrectOverride !== null ? isCorrectOverride : (selectedElement.dataset.correct === 'true');
     if (isCorrect) correctAnswers++;
+    
     revealAnswer(isCorrect, selectedElement);
 
+    const payload = buildAnswerPayload(question, answerText);
+    
     if (lobbyId) {
-        await quizWs.publish(`/app/game/${lobbyId}/answer`, buildAnswerPayload(question, answerText));
+        await quizWs.publish(`/app/game/${lobbyId}/answer`, payload);
     } else {
         const saved = await saveQuestionStat(question, answerText);
         totalScore += Number(saved?.points || 0);
@@ -140,6 +148,11 @@ async function selectAnswer(question, answerText, isCorrect, selectedElement) {
             progress: (currentQuestionIndex + 1) / quizData.questions.length
         });
     }
+    
+    if (usedBonus) {
+        availableBonus = null;
+        renderAvailableBonus();
+    }
 
     showNextButton();
 }
@@ -148,16 +161,16 @@ function revealAnswer(isCorrect, selectedElement) {
     const buttons = Array.from(document.querySelectorAll('.answer-option'));
     buttons.forEach(button => {
         button.disabled = true;
-        button.style.display = '';
         if (button.dataset.correct === 'true') button.classList.add('correct');
     });
-    if (selectedElement?.classList?.contains('answer-option')) {
+
+    if (selectedElement) { // Если это кнопка
         selectedElement.classList.add(isCorrect ? 'correct' : 'wrong');
-    } else {
+    } else { // Если это текстовое поле
         const message = document.createElement('p');
         message.className = isCorrect ? 'answer-row correct' : 'answer-row wrong';
-        const correct = quizData.questions[currentQuestionIndex].answers?.find(answer => answer.isCorrect);
-        message.textContent = isCorrect ? 'Ответ правильный' : `Неверно. Правильный ответ: ${correct?.text || ''}`;
+        const correctAnswer = quizData.questions[currentQuestionIndex].answers?.find(answer => answer.isCorrect);
+        message.textContent = isCorrect ? 'Ответ правильный' : `Неверно. Правильный ответ: ${correctAnswer?.text || ''}`;
         document.getElementById('answer-options').appendChild(message);
     }
 }
@@ -180,10 +193,35 @@ function buildAnswerPayload(question, answerText) {
         questionId: question.id,
         attemptId,
         answer: answerText,
-        activeBonus,
+        activeBonus: usedBonus,
         startedAt: questionStartedAt.toISOString(),
         completedAt: new Date().toISOString()
     };
+}
+
+function renderAvailableBonus() {
+    const panel = document.getElementById('bonus-panel');
+    panel.innerHTML = '';
+    if (!availableBonus) return;
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'bonus-button';
+    button.dataset.bonus = availableBonus;
+    button.textContent = availableBonus.replace(/_/g, ' ');
+    
+    button.onclick = () => {
+        if (button.classList.contains('active')) {
+            button.classList.remove('active');
+            usedBonus = null;
+        } else {
+            document.querySelectorAll('.bonus-button.active').forEach(b => b.classList.remove('active'));
+            button.classList.add('active');
+            usedBonus = availableBonus;
+        }
+    };
+    
+    panel.appendChild(button);
 }
 
 async function saveQuestionStat(question, answerText) {
@@ -197,7 +235,6 @@ async function saveQuestionStat(question, answerText) {
 async function showResult(pushedResults = null) {
     if (resultShown) return;
     resultShown = true;
-    // stop timer
     if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
 
     document.getElementById('question-container').style.display = 'none';
@@ -217,7 +254,6 @@ async function showResult(pushedResults = null) {
 
     document.getElementById('score-line').innerHTML = `Очки: <strong>${score}</strong>${lobbyId ? renderMyPlaceText(results) : ''}`;
 
-    // show finish-for-all button to host/admin on results screen
     if (lobbyId) {
         const isHost = lobbyData && (lobbyData.host === me.id || me.role === 'ADMIN');
         const finishBtn = document.getElementById('finish-for-all-btn');
@@ -225,7 +261,6 @@ async function showResult(pushedResults = null) {
             finishBtn.style.display = isHost ? 'inline-flex' : 'none';
             finishBtn.onclick = endQuizForLobby;
         }
-        // mark this as final results
         document.getElementById('quiz-result').classList.add('final-results');
         const h2 = document.querySelector('#quiz-result h2');
         if (h2) h2.textContent = 'Финальные результаты';
@@ -251,11 +286,9 @@ function formatTimeLeft(seconds) {
 
 function startCountdown() {
     if (!quizData || (!quizData.timeLimit && !quizData.timeLimitSeconds) ) return;
-    // support both naming
-    const timeLimit = Number(quizData.timeLimit || quizData.timeLimitSeconds || quizData.timeLimitSecondsRaw) || 0; // seconds
+    const timeLimit = Number(quizData.timeLimit || quizData.timeLimitSeconds || quizData.timeLimitSecondsRaw) || 0;
     if (!timeLimit) return;
 
-    // compute startedAt
     const started = attemptStartedAt ? new Date(attemptStartedAt) : new Date();
     function tick() {
         const now = new Date();
@@ -266,13 +299,10 @@ function startCountdown() {
         if (left <= 0) {
             clearInterval(countdownInterval);
             countdownInterval = null;
-            // if lobby - wait for server to send ended message; but still show results locally
             if (lobbyId) {
-                // ask server to finish lobby if host
                 if (lobbyData && (lobbyData.host === me.id || me.role === 'ADMIN')) {
                     endQuizForLobby();
                 } else {
-                    // just show results
                     showResult();
                 }
             } else {
@@ -304,69 +334,6 @@ function renderLobbyResults(results) {
             `).join('') || '<p class="muted">Результатов пока нет.</p>'}
         </div>
     `;
-}
-
-function buildBonusQuestionIndexes(totalQuestions) {
-    if (totalQuestions <= 0) return new Set();
-    if (totalQuestions < 5) return new Set([0]);
-
-    const count = Math.min(4, Math.max(1, Math.floor(totalQuestions / 5)));
-    const indexes = new Set();
-    for (let i = 1; i <= count; i++) {
-        indexes.add(Math.min(totalQuestions - 1, Math.ceil((totalQuestions * i) / count) - 1));
-    }
-    return indexes;
-}
-
-function renderBonuses(question) {
-    const panel = document.getElementById('bonus-panel');
-    panel.innerHTML = '';
-    if (!bonusQuestionIndexes.has(currentQuestionIndex)) return;
-
-    panel.innerHTML = pickBonuses(question).map(bonus => `
-        <button type="button" class="bonus-button" data-bonus="${bonus.type}" title="${escapeHtml(bonus.description)}">
-            ${escapeHtml(bonus.label)}
-        </button>
-    `).join('');
-
-    panel.querySelectorAll('.bonus-button').forEach(button => {
-        button.onclick = () => activateBonus(button.dataset.bonus, question);
-    });
-}
-
-function pickBonuses(question) {
-    const bonuses = [
-        { type: 'DOUBLING', label: 'x2', description: 'Удваивает баллы за правильный ответ' },
-        { type: 'BONUS_POINTS', label: '+50%', description: 'Добавляет половину баллов за правильный ответ' }
-    ];
-    if ((question.answers || []).filter(answer => !answer.isCorrect).length >= 2) {
-        bonuses.push({ type: 'HALFTOHALF', label: '50/50', description: 'Убирает часть неверных вариантов' });
-    }
-    return bonuses;
-}
-
-function activateBonus(type, question) {
-    if (answerLocked) return;
-    document.querySelectorAll('.bonus-button').forEach(button => button.classList.remove('active'));
-    const button = document.querySelector(`.bonus-button[data-bonus="${type}"]`);
-    if (button) button.classList.add('active');
-
-    if (type === 'HALFTOHALF') {
-        activeBonus = null;
-        applyHalfToHalf();
-        return;
-    }
-    activeBonus = type;
-}
-
-function applyHalfToHalf() {
-    const wrongButtons = Array.from(document.querySelectorAll('.answer-option'))
-        .filter(button => button.dataset.correct !== 'true');
-    const keepWrongCount = Math.max(1, Math.floor(wrongButtons.length / 2));
-    wrongButtons.slice(keepWrongCount).forEach(button => {
-        button.disabled = true;
-        button.style.display = 'none';
-    });
 }
 
 function updateLiveMember(member) {

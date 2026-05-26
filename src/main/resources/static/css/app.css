@@ -168,8 +168,8 @@ a {
 }
 
 .avatar {
-    width: 64px;
-    height: 64px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
     object-fit: cover;
     border: 2px solid var(--line);
@@ -409,7 +409,7 @@ label {
 
 .leaderboard-row {
     display: grid;
-    grid-template-columns: 72px 1fr auto;
+    grid-template-columns: auto 48px 1fr auto;
     align-items: center;
     gap: 12px;
     padding: 14px;

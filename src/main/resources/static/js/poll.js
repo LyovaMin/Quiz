@@ -54,7 +54,8 @@ async function vote(answerId) {
     });
 
     if (response.status.startsWith('2')) {
-        showResults(response.data);
+        // Правильно передаем только массив с результатами
+        showResults(response.data.results);
     } else {
         alert(response.message || 'Ошибка при голосовании');
         // Если ошибка "уже голосовал", то просто показываем результаты

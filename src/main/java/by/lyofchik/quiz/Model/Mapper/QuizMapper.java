@@ -48,12 +48,10 @@ public interface QuizMapper {
     AnswerDTO toAnswerDTO(Answer answer);
 
     @Mapping(source = "image", target = "imageUrl")
-    @Mapping(source = "createdBy", target = "creator")
     @Mapping(source = "timeLimitSeconds", target = "timeLimit")
     @Mapping(source = "public", target = "isPublic")
     @Mapping(source = "type", target = "type")
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "questions", ignore = true)
+    @Mapping(target = "creator", ignore = true) // ?????????? ?????????, ????? ?? ???????? ???
     void updateQuizFromRq(QuizRq request, @MappingTarget Quiz quiz);
 
     @AfterMapping

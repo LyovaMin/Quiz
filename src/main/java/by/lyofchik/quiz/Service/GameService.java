@@ -17,6 +17,8 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 @Service
 @AllArgsConstructor
@@ -31,47 +33,101 @@ public class GameService {
     private QuestionRepository questionRepository;
     private AnalyticsMapper analyticsMapper;
 
+    private static final int BONUS_CHANCE_THRESHOLD = 4; // ???? 1 ?? 4-6
+
     public Response answer(GameRq request, int lobbyId) {
         log.info("game.answer called: lobbyId={}, userId={}, questionId={}", lobbyId, request.getUserId(), request.getQuestionId());
         Optional<Lobby> lobbyOpt = lobbyRepository.findById(lobbyId);
         Answer answer = answerRepository.findCorrectByQuestionId(request.getQuestionId());
         Optional<GameMember> memberOpt = gameMemberRepository.findById(request.getUserId());
+
         if (lobbyOpt.isEmpty() || answer == null || memberOpt.isEmpty()) {
             log.warn("Game data not found: lobbyExists={}, answerExists={}, memberExists={}", lobbyOpt.isPresent(), answer != null, memberOpt.isPresent());
             return Response.error("404", "Game data not found");
         }
+
         Lobby lobby = lobbyOpt.get();
         GameMember member = memberOpt.get();
         Question question = answer.getQuestion();
-        float progress;
-        try {
-            progress = countProgress(lobby.getQuiz());
-        } catch (Exception e) {
-            log.warn("Failed to compute progress for lobby {} quiz: {}", lobbyId, e.getMessage());
-            progress = 0f;
-        }
-        float oldProgress = member.getProgress() == null ? 0f : member.getProgress();
-        member.setProgress(oldProgress + progress);
-        boolean correct = isCorrect(answer, request.getAnswer());
 
-        int points = 0;
-        try {
-            points = countPoints(question, request, correct);
-        } catch (Exception e) {
-            log.error("Error counting points for question {}: {}", question.getId(), e.getMessage(), e);
+        // ????????? ?????, ???? ?? ??? ???????????
+        BonusType usedBonus = request.getActiveBonus();
+        if (usedBonus != null) {
+            member.setAvailableBonus(null); // ????? ??????? ????? ????? ?????????????
         }
-        int oldScore = member.getScore() == null ? 0 : member.getScore();
-        int newScore = oldScore + points;
-        log.info("Member {}: correct={}, pointsToAdd={}, oldScore={}, newScore={}", member.getId(), correct, points, oldScore, newScore);
-        member.setScore(newScore);
+
+        // ?????????? ??????, ???? ??????????? ??????????????? ?????
+        if (usedBonus == BonusType.SKIP_QUESTION) {
+            gameMemberRepository.save(member);
+            return Response.success(Map.of("member", member, "correct", false, "points", 0));
+        }
+
+        boolean correct = isCorrect(answer, request.getAnswer());
+        int points = countPoints(question, request, correct, usedBonus);
+
+        // ?????? ??? ?????? "?????? ????"
+        if (!correct && usedBonus == BonusType.SECOND_CHANCE) {
+            gameMemberRepository.save(member); // ?????????, ??? ????? ???????????
+            return Response.success(Map.of("member", member, "correct", false, "points", 0, "secondChance", true));
+        }
+        
+        // ?????? ??? ?????? "?????????? ?????"
+        if (!correct && usedBonus == BonusType.STREAK_SAVER) {
+            correct = true; // ??????? ????? ?????????? ??? ?????????? ?????, ?? ???? ?? ?????????
+            points = 0;
+        }
+
+        float progress = countProgress(lobby.getQuiz());
+        member.setProgress((member.getProgress() == null ? 0f : member.getProgress()) + progress);
+        member.setScore((member.getScore() == null ? 0 : member.getScore()) + points);
         member.setLastUpdate(Instant.now());
+
+        // ???????? ?????? ????? ?????, ???? ? ?????? ??? ???
+        tryAwardBonus(member);
+
         QuestionStat stat = buildQuestionStat(request, answer, correct);
         questionStatRepository.save(stat);
         gameMemberRepository.save(member);
-        log.info("Saved member {} score={}", member.getId(), member.getScore());
-        return Response.success(member);
+        log.info("Saved member {} score={}, newBonus={}", member.getId(), member.getScore(), member.getAvailableBonus());
+
+        return Response.success(Map.of("member", member, "correct", correct, "points", points));
     }
 
+    private void tryAwardBonus(GameMember member) {
+        if (member.getAvailableBonus() == null) {
+            int randomNum = ThreadLocalRandom.current().nextInt(1, 7); // ?? 1 ?? 6
+            if (randomNum >= BONUS_CHANCE_THRESHOLD) {
+                BonusType[] allBonuses = BonusType.values();
+                BonusType awardedBonus = allBonuses[new Random().nextInt(allBonuses.length)];
+                member.setAvailableBonus(awardedBonus);
+                log.info("Awarded bonus {} to member {}", awardedBonus, member.getId());
+            }
+        }
+    }
+
+    private int countPoints(Question question, GameRq request, boolean correct, BonusType usedBonus) {
+        if (!correct) {
+            return 0;
+        }
+        int points = question.getPoints() != 0 ? question.getPoints() : question.getType().getDefaultPoints();
+        float multiplier = 1f;
+
+        if (request.getStartedAt() != null && request.getCompletedAt() != null) {
+            long answeredFor = Duration.between(request.getStartedAt(), request.getCompletedAt()).getSeconds();
+            multiplier *= Constants.getGrade(answeredFor);
+        }
+
+        if (usedBonus == BonusType.DOUBLING) {
+            multiplier *= 2;
+        }
+        if (usedBonus == BonusType.BONUS_POINTS) {
+            points += 50; // ????????? ????????????? 50 ?????
+        }
+
+        return Math.round(points * multiplier);
+    }
+
+    // ... (????????? ?????? ??? ?????????)
     public Response answer(GameRq request) {
         Answer answer = answerRepository.findCorrectByQuestionId(request.getQuestionId());
         Question question = questionRepository.findById(request.getQuestionId());
@@ -79,7 +135,7 @@ public class GameService {
             return Response.error("404", "Question or answer not found");
         }
         boolean correct = isCorrect(answer, request.getAnswer());
-        int points = countPoints(question, request, correct);
+        int points = countPoints(question, request, correct, request.getActiveBonus());
         QuestionStat stat = buildQuestionStat(request, answer, correct);
         questionStatRepository.save(stat);
         return Response.success(Map.of("stat", stat, "points", points, "correct", correct));
@@ -106,31 +162,6 @@ public class GameService {
         attempt.setCompletedAt(Instant.now());
         quizAttemptRepository.save(attempt);
         return Response.success(attempt);
-    }
-
-    private int countPoints(Question question, GameRq request, boolean correct) {
-        if (!correct) {
-            return 0;
-        }
-        int points = question.getPoints() != 0 ? question.getPoints() : question.getType().getDefaultPoints();
-
-        float multiplier = 1f;
-        if (request.getStartedAt() == null || request.getCompletedAt() == null) {
-            return applyActiveBonus(points, request.getActiveBonus());
-        }
-        long answeredFor = Duration.between(request.getStartedAt(), request.getCompletedAt()).getSeconds();
-        multiplier *= Constants.getGrade(answeredFor);
-        return Math.round(applyActiveBonus(points, request.getActiveBonus()) * multiplier);
-    }
-
-    private int applyActiveBonus(int points, BonusType activeBonus) {
-        if (activeBonus == BonusType.DOUBLING) {
-            return points * 2;
-        }
-        if (activeBonus == BonusType.BONUS_POINTS) {
-            return points + points / 2;
-        }
-        return points;
     }
 
     private float countProgress(Quiz quiz){

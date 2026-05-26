@@ -64,7 +64,7 @@ async function viewQuiz(id) {
             <section class="question-block">
                 <h3>${index + 1}. ${escapeHtml(q.description)}</h3>
                 ${(q.answers || []).length > 1 ? q.answers.map(a => `
-                    <div class="answer-row ${a.isCorrect ? 'correct' : ''}">
+                    <div class="answer-row ${canEdit && a.isCorrect ? 'correct' : ''}">
                         ${escapeHtml(a.text)}
                     </div>
                 `).join('') : '<p class="muted">Ответ вводится текстом.</p>'}
