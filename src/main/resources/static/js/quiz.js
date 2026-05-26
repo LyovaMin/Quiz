@@ -16,6 +16,11 @@ let bonusQuestionIndexes = new Set();
 let activeBonus = null;
 let liveScores = [];
 
+// timer
+let countdownInterval = null;
+let attemptStartedAt = null; // ISO string or null
+
+
 async function startQuiz() {
     me = await requireUser();
     if (!me) return;
@@ -30,11 +35,23 @@ async function startQuiz() {
         await initLobbyMode();
     }
 
+    // if we are coming to see results only (re-entering a lobby after finishing), show results and skip starting a new attempt
+    if (query.get('showResults') === 'true' && lobbyId) {
+        const results = await loadLobbyResults();
+        await showResult(results);
+        return;
+    }
+
     const attempt = await api('/ws/api/attempt/start', {
         method: 'POST',
         body: JSON.stringify({ quizId, userId: me.id })
     });
     attemptId = attempt.data?.id;
+    attemptStartedAt = attempt.data?.startedAt || new Date().toISOString();
+
+    // start countdown timer
+    startCountdown();
+
     displayQuestion();
 }
 
@@ -45,6 +62,12 @@ async function initLobbyMode() {
     const endButton = document.getElementById('end-lobby-quiz-btn');
     endButton.style.display = isHost ? 'inline-flex' : 'none';
     endButton.onclick = endQuizForLobby;
+
+    // start countdown using lobby start if present
+    if (lobbyData && lobbyData.startedAt) {
+        attemptStartedAt = lobbyData.startedAt;
+        startCountdown();
+    }
 
     await quizWs.subscribe(`/topic/lobby/${lobbyId}/ended`, async (results) => {
         await showResult(results);
@@ -174,6 +197,9 @@ async function saveQuestionStat(question, answerText) {
 async function showResult(pushedResults = null) {
     if (resultShown) return;
     resultShown = true;
+    // stop timer
+    if (countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; }
+
     document.getElementById('question-container').style.display = 'none';
     document.getElementById('quiz-result').style.display = 'block';
     document.getElementById('end-lobby-quiz-btn').style.display = 'none';
@@ -191,6 +217,20 @@ async function showResult(pushedResults = null) {
 
     document.getElementById('score-line').innerHTML = `Очки: <strong>${score}</strong>${lobbyId ? renderMyPlaceText(results) : ''}`;
 
+    // show finish-for-all button to host/admin on results screen
+    if (lobbyId) {
+        const isHost = lobbyData && (lobbyData.host === me.id || me.role === 'ADMIN');
+        const finishBtn = document.getElementById('finish-for-all-btn');
+        if (finishBtn) {
+            finishBtn.style.display = isHost ? 'inline-flex' : 'none';
+            finishBtn.onclick = endQuizForLobby;
+        }
+        // mark this as final results
+        document.getElementById('quiz-result').classList.add('final-results');
+        const h2 = document.querySelector('#quiz-result h2');
+        if (h2) h2.textContent = 'Финальные результаты';
+    }
+
     await api('/ws/api/attempt/finish', {
         method: 'POST',
         body: JSON.stringify({ quizId, userId: me.id, score })
@@ -201,6 +241,50 @@ async function loadLobbyResults() {
     const response = await api(`/lobby/api/${lobbyId}/results`);
     return response.status.startsWith('2') ? response.data : [];
 }
+
+function formatTimeLeft(seconds) {
+    if (seconds <= 0) return '00:00';
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+}
+
+function startCountdown() {
+    if (!quizData || (!quizData.timeLimit && !quizData.timeLimitSeconds) ) return;
+    // support both naming
+    const timeLimit = Number(quizData.timeLimit || quizData.timeLimitSeconds || quizData.timeLimitSecondsRaw) || 0; // seconds
+    if (!timeLimit) return;
+
+    // compute startedAt
+    const started = attemptStartedAt ? new Date(attemptStartedAt) : new Date();
+    function tick() {
+        const now = new Date();
+        const elapsed = Math.floor((now - started) / 1000);
+        const left = Math.max(0, timeLimit - elapsed);
+        const el = document.getElementById('timer');
+        if (el) el.textContent = formatTimeLeft(left);
+        if (left <= 0) {
+            clearInterval(countdownInterval);
+            countdownInterval = null;
+            // if lobby - wait for server to send ended message; but still show results locally
+            if (lobbyId) {
+                // ask server to finish lobby if host
+                if (lobbyData && (lobbyData.host === me.id || me.role === 'ADMIN')) {
+                    endQuizForLobby();
+                } else {
+                    // just show results
+                    showResult();
+                }
+            } else {
+                showResult();
+            }
+        }
+    }
+    if (countdownInterval) clearInterval(countdownInterval);
+    tick();
+    countdownInterval = setInterval(tick, 1000);
+}
+
 
 function renderMyPlaceText(results) {
     const mine = (results || []).find(result => result.userId === me.id);

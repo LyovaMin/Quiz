@@ -26,7 +26,8 @@ async function loadQuizList() {
             page: 0,
             size: 50,
             search: document.getElementById('quiz-search').value.trim(),
-            topicId: document.getElementById('quiz-topic-filter').value || null
+            topicId: document.getElementById('quiz-topic-filter').value || null,
+            type: 'QUIZ'
         })
     });
     const quizzes = result.data?.content || [];

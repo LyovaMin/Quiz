@@ -5,6 +5,8 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Nationalized;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
 
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -20,6 +22,7 @@ public class Lobby {
     private Integer id;
 
     @ManyToOne(fetch = FetchType.EAGER)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "quiz_id")
     private Quiz quiz;
 
@@ -27,6 +30,9 @@ public class Lobby {
     @Column(name = "status", length = 20)
     @Enumerated(EnumType.STRING)
     private LobbyStatus status;
+
+    @Column(name = "started_at")
+    private java.time.Instant startedAt;
 
     @Nationalized
     @Column(name = "password", length = 20)

@@ -11,6 +11,7 @@ import by.lyofchik.quiz.Model.Mapper.QuizMapper;
 import by.lyofchik.quiz.Repository.QuizTopicRepository;
 import by.lyofchik.quiz.Repository.QuizzesRepository;
 import by.lyofchik.quiz.Repository.TopicRepository;
+import by.lyofchik.quiz.Repository.LobbyRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,7 @@ public class ModificationService {
     QuizzesRepository quizzesRepository;
     QuizTopicRepository quizTopicRepository;
     TopicRepository topicRepository;
+    LobbyRepository lobbyRepository;
     QuizMapper quizMapper;
     AuthService authService;
 
@@ -59,6 +61,8 @@ public class ModificationService {
         if (!canManage(quiz.get(), currentUser)) {
             return Response.error("403", "You are not allowed to delete this quiz");
         }
+        // delete dependent lobbies first to avoid FK constraint errors
+        lobbyRepository.deleteByQuiz(quiz.get());
         quizzesRepository.deleteById(id);
         return Response.success();
     }
@@ -109,14 +113,17 @@ public class ModificationService {
     }
 
     private void saveTopics(Integer quizId, java.util.List<Integer> topicIds) {
-        quizTopicRepository.deleteByQuiz(quizId);
+        var quizOpt = quizzesRepository.findById(quizId);
+        if (quizOpt.isEmpty()) return;
+        Quiz quiz = quizOpt.get();
+        quizTopicRepository.deleteByQuiz(quiz);
         topicIds.forEach(topicId -> topicRepository.findById(topicId).ifPresent(topic -> {
             QuizTopic quizTopic = new QuizTopic();
             QuizTopicId id = new QuizTopicId();
             id.setQuizId(quizId);
             id.setTopicId(topicId);
             quizTopic.setId(id);
-            quizTopic.setQuiz(quizId);
+            quizTopic.setQuiz(quiz);
             quizTopic.setTopic(topic);
             quizTopicRepository.save(quizTopic);
         }));

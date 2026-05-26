@@ -32,11 +32,14 @@ async function loadLobbyList() {
     `).join('') || '<p class="muted">Активные лобби не найдены.</p>';
 }
 
-async function openCreateLobby() {
+async function openCreateLobby(preselectQuizId = null) {
     const quizzes = await api('/lobby/api/quizzes');
     document.getElementById('quiz-dropdown').innerHTML = (quizzes.data || [])
         .map(quiz => `<option value="${quiz.id}">${escapeHtml(quiz.title)}</option>`)
         .join('');
+    if (preselectQuizId) {
+        document.getElementById('quiz-dropdown').value = String(preselectQuizId);
+    }
     document.getElementById('create-lobby-modal').classList.add('open');
 }
 
@@ -44,7 +47,15 @@ function closeCreateLobby() {
     document.getElementById('create-lobby-modal').classList.remove('open');
 }
 
-document.getElementById('create-lobby-btn').onclick = openCreateLobby;
+document.getElementById('create-lobby-btn').onclick = () => openCreateLobby();
+
+// if page was opened with ?quizId=, auto-open create modal with that quiz preselected
+(function checkPreselect() {
+    const q = new URLSearchParams(window.location.search).get('quizId');
+    if (q) {
+        openCreateLobby(Number(q));
+    }
+})();
 
 document.getElementById('save-lobby-btn').onclick = async () => {
     const quiz = Number(document.getElementById('quiz-dropdown').value);

@@ -15,7 +15,12 @@ public enum TopicName {
     MUSIC("Музыка"),
     SPORT("Спорт"),
     GAMES("Игры"),
-    GENERAL("Общие знания");
+    GENERAL("Общие знания"),
+    ART("Искусство"),
+    LITERATURE("Литература"),
+    ANIMALS("Животные"),
+    FOOD("Еда"),
+    FASHION("Мода");
 
     private final String topicName;
 }

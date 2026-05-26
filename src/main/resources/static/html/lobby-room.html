@@ -11,6 +11,7 @@
     <aside class="sidebar">
         <div class="brand">Quiz</div>
         <a class="nav-link" href="/quizzes">Викторины</a>
+        <a class="nav-link" href="/polls">Опросы</a>
         <a class="nav-link active" href="/lobby">Лобби</a>
         <a class="nav-link" href="/leaderboard">Лидерборд</a>
     </aside>
@@ -33,7 +34,11 @@
             <select id="quiz-dropdown"></select>
             <div class="actions" id="host-actions">
                 <button id="save-lobby-btn" class="secondary">Сменить викторину</button>
+                <label style="display:flex;align-items:center;margin-left:8px;">
+                    <input type="checkbox" id="host-participates" checked style="margin-right:6px;"> Хост участвует
+                </label>
                 <button id="start-quiz-btn">Начать квиз</button>
+                <button id="end-quiz-btn" class="danger" style="display: none;">Завершить квиз</button>
             </div>
             <p id="room-message" class="muted"></p>
         </section>

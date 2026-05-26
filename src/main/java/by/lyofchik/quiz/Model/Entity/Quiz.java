@@ -53,4 +53,7 @@ public class Quiz {
     @NonNull
     @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Question> questions = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "quiz", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<QuizTopic> quizTopics = new LinkedHashSet<>();
 }

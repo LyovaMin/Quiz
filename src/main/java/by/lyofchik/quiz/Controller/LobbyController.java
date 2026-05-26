@@ -53,8 +53,8 @@ public class LobbyController {
 
     @PostMapping("/api/{lobbyId}/start")
     @ResponseBody
-    public Response startQuiz(@PathVariable int lobbyId, @RequestParam int quizId, HttpSession session) {
-        Response response = lobbyService.startQuiz(lobbyId, quizId, authService.currentUserOrNull(session));
+    public Response startQuiz(@PathVariable int lobbyId, @RequestParam int quizId, @RequestParam(defaultValue = "true") boolean hostParticipates, HttpSession session) {
+        Response response = lobbyService.startQuiz(lobbyId, quizId, hostParticipates, authService.currentUserOrNull(session));
         if (response.getStatus().startsWith("2")) {
             messagingTemplate.convertAndSend("/topic/lobby/" + lobbyId + "/started", response.getData());
         }
@@ -99,6 +99,12 @@ public class LobbyController {
     @ResponseBody
     public Response getPlayers(@PathVariable int lobbyId) {
         return lobbyService.getPlayers(lobbyId);
+    }
+
+    @GetMapping("/api/{lobbyId}/completed")
+    @ResponseBody
+    public Response isCompleted(@PathVariable int lobbyId, HttpSession session) {
+        return lobbyService.isUserCompletedInLobby(lobbyId, authService.currentUserOrNull(session));
     }
 
     @PostMapping("/api/{lobbyId}/join")

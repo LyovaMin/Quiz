@@ -13,6 +13,8 @@ import org.springframework.stereotype.Repository;
 public interface QuizzesRepository extends JpaRepository<Quiz, Integer> {
     Quiz getQuizById(Integer id);
 
+    java.util.List<Quiz> findByType(Type type);
+
     @Query("""
             SELECT q FROM Quiz q
             WHERE (:search IS NULL OR :search = ''
@@ -20,7 +22,7 @@ public interface QuizzesRepository extends JpaRepository<Quiz, Integer> {
                    OR LOWER(q.description) LIKE LOWER(CONCAT('%', :search, '%')))
               AND (:topicId IS NULL OR EXISTS (
                     SELECT qt.id FROM QuizTopic qt
-                    WHERE qt.quiz = q.id AND qt.topic.id = :topicId
+                    WHERE qt.quiz.id = q.id AND qt.topic.id = :topicId
               ))
               AND (:type IS NULL OR q.type = :type)
             """)

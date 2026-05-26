@@ -8,15 +8,20 @@ import by.lyofchik.quiz.Model.Mapper.AnalyticsMapper;
 import by.lyofchik.quiz.Repository.*;
 import by.lyofchik.quiz.Utils.Constants;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
+@Slf4j
+@Transactional
 public class GameService {
     private LobbyRepository lobbyRepository;
     private AnswerRepository answerRepository;
@@ -27,23 +32,43 @@ public class GameService {
     private AnalyticsMapper analyticsMapper;
 
     public Response answer(GameRq request, int lobbyId) {
-        Lobby lobby = lobbyRepository.findById(lobbyId);
+        log.info("game.answer called: lobbyId={}, userId={}, questionId={}", lobbyId, request.getUserId(), request.getQuestionId());
+        Optional<Lobby> lobbyOpt = lobbyRepository.findById(lobbyId);
         Answer answer = answerRepository.findCorrectByQuestionId(request.getQuestionId());
-        GameMember member = gameMemberRepository.findById(request.getUserId());
-        if (lobby == null || answer == null || member == null) {
+        Optional<GameMember> memberOpt = gameMemberRepository.findById(request.getUserId());
+        if (lobbyOpt.isEmpty() || answer == null || memberOpt.isEmpty()) {
+            log.warn("Game data not found: lobbyExists={}, answerExists={}, memberExists={}", lobbyOpt.isPresent(), answer != null, memberOpt.isPresent());
             return Response.error("404", "Game data not found");
         }
+        Lobby lobby = lobbyOpt.get();
+        GameMember member = memberOpt.get();
         Question question = answer.getQuestion();
-        float progress = countProgress(lobby.getQuiz());
-        member.setProgress((member.getProgress() == null ? 0f : member.getProgress()) + progress);
+        float progress;
+        try {
+            progress = countProgress(lobby.getQuiz());
+        } catch (Exception e) {
+            log.warn("Failed to compute progress for lobby {} quiz: {}", lobbyId, e.getMessage());
+            progress = 0f;
+        }
+        float oldProgress = member.getProgress() == null ? 0f : member.getProgress();
+        member.setProgress(oldProgress + progress);
         boolean correct = isCorrect(answer, request.getAnswer());
 
-        int points = countPoints(question, request, correct);
-        member.setScore((member.getScore() == null ? 0 : member.getScore()) + points);
+        int points = 0;
+        try {
+            points = countPoints(question, request, correct);
+        } catch (Exception e) {
+            log.error("Error counting points for question {}: {}", question.getId(), e.getMessage(), e);
+        }
+        int oldScore = member.getScore() == null ? 0 : member.getScore();
+        int newScore = oldScore + points;
+        log.info("Member {}: correct={}, pointsToAdd={}, oldScore={}, newScore={}", member.getId(), correct, points, oldScore, newScore);
+        member.setScore(newScore);
         member.setLastUpdate(Instant.now());
         QuestionStat stat = buildQuestionStat(request, answer, correct);
         questionStatRepository.save(stat);
         gameMemberRepository.save(member);
+        log.info("Saved member {} score={}", member.getId(), member.getScore());
         return Response.success(member);
     }
 

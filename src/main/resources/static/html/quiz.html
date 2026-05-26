@@ -13,6 +13,7 @@
         <div>
             <h1 id="quiz-title">Квиз</h1>
             <p id="quiz-progress" class="muted"></p>
+            <div id="timer" class="muted" style="margin-left:12px;"></div>
         </div>
         <div class="actions">
             <button id="end-lobby-quiz-btn" class="danger" style="display:none;">Завершить для всех</button>
@@ -30,7 +31,10 @@
         <p>Правильных ответов: <strong id="correct-answers"></strong> из <strong id="total-questions"></strong>.</p>
         <p id="score-line"></p>
         <div id="lobby-results"></div>
-        <a class="button" href="/quizzes">К списку викторин</a>
+        <div style="margin-top:12px;">
+            <button id="finish-for-all-btn" class="danger" style="display:none;">Завершить для всех</button>
+            <a class="button" href="/quizzes">К списку викторин</a>
+        </div>
     </section>
 </main>
 

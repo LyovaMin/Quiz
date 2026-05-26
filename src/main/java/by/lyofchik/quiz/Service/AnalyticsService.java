@@ -124,7 +124,7 @@ public class AnalyticsService {
     private Map<String, Object> toTopicRow(Topic topic) {
         return Map.of(
                 "id", topic.getId(),
-                "name", topic.getName().name()
+                "name", topic.getName().getTopicName()
         );
     }
 

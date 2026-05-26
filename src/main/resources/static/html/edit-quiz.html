@@ -11,6 +11,7 @@
     <aside class="sidebar">
         <div class="brand">Quiz</div>
         <a class="nav-link active" href="/quizzes">Викторины</a>
+        <a class="nav-link" href="/polls">Опросы</a>
         <a class="nav-link" href="/lobby">Лобби</a>
         <a class="nav-link" href="/leaderboard">Лидерборд</a>
     </aside>
@@ -32,12 +33,30 @@
             <label for="timeLimit">Лимит времени, сек.</label>
             <input type="number" id="timeLimit" value="60" min="5">
 
+            <label for="type-select">Тип</label>
+            <select id="type-select">
+                <option value="QUIZ">Викторина</option>
+                <option value="POLL">Опрос</option>
+            </select>
+
             <label>Темы</label>
-            <div id="topic-options" class="topic-options"></div>
+            <div id="topic-selection">
+                <!-- Сюда будут добавляться выпадающие списки -->
+            </div>
+            <button type="button" id="add-topic-btn" class="secondary">Добавить тему</button>
             <p class="muted">Выберите от 1 до 3 тем.</p>
 
             <div id="questions-container">
                 <h2>Вопросы</h2>
+            </div>
+
+            <div id="poll-section" style="display:none;">
+                <h2>Опрос</h2>
+                <label for="poll-question">Текст опроса</label>
+                <input type="text" id="poll-question">
+                <h3>Варианты для голосования</h3>
+                <div id="poll-options-container"></div>
+                <button type="button" id="add-poll-option" class="secondary">Добавить вариант</button>
             </div>
 
             <div class="actions">

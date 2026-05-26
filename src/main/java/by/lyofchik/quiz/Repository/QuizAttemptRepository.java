@@ -23,7 +23,7 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Intege
               AND (:fromDate IS NULL OR qa.completedAt >= :fromDate)
               AND (:topicId IS NULL OR EXISTS (
                     SELECT qt.id FROM QuizTopic qt
-                    WHERE qt.quiz = qa.quiz AND qt.topic.id = :topicId
+                    WHERE qt.quiz.id = qa.quiz AND qt.topic.id = :topicId
               ))
             GROUP BY u.id, u.login, u.imageUrl
             ORDER BY SUM(qa.score) DESC
@@ -40,7 +40,7 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Intege
               AND (:fromDate IS NULL OR qa.completedAt >= :fromDate)
               AND (:topicId IS NULL OR EXISTS (
                     SELECT qt.id FROM QuizTopic qt
-                    WHERE qt.quiz = qa.quiz AND qt.topic.id = :topicId
+                    WHERE qt.quiz.id = qa.quiz AND qt.topic.id = :topicId
               ))
             """)
     Long getUserScore(@Param("userId") Integer userId,
@@ -48,4 +48,6 @@ public interface QuizAttemptRepository extends JpaRepository<QuizAttempt, Intege
                       @Param("topicId") Integer topicId);
 
     long countByQuizAndCompletedAtIsNotNull(Integer quiz);
+
+    boolean existsByQuizAndUserAndCompletedAtIsNotNull(Integer quiz, Integer user);
 }

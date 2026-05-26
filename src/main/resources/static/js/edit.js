@@ -1,16 +1,54 @@
 const params = new URLSearchParams(window.location.search);
 const quizId = params.get('id');
-const type = params.get('type') || 'QUIZ';
+let type = params.get('type') || 'QUIZ';
 let me = null;
 let topics = [];
 
 async function initEditor() {
     me = await requireUser();
     if (!me) return;
-    await loadTopics();
+    
     document.getElementById('add-q-btn').onclick = () => addQuestionUI();
     document.getElementById('quiz-form').onsubmit = saveQuiz;
     document.getElementById('delete-btn').onclick = deleteQuiz;
+    document.getElementById('add-topic-btn').onclick = addTopicSelector;
+
+    const typeSelect = document.getElementById('type-select');
+    if (typeSelect) {
+        typeSelect.value = type;
+        typeSelect.onchange = () => {
+            type = typeSelect.value;
+            document.getElementById('form-title').textContent = type === 'POLL' ? 'Новый опрос' : 'Новый квиз';
+            document.getElementById('add-q-btn').style.display = type === 'POLL' ? 'none' : 'inline-flex';
+            // show/hide poll section
+            const pollSection = document.getElementById('poll-section');
+            if (pollSection) pollSection.style.display = type === 'POLL' ? 'block' : 'none';
+            // ensure at least one question present for poll
+            const qContainer = document.getElementById('questions-container');
+            if (type === 'POLL' && qContainer.children.length === 0) addQuestionUI();
+        };
+        // apply initial state for provided type (important when opening editor with ?type=POLL)
+        typeSelect.onchange();
+    }
+
+    await loadTopics(); // Ждем загрузки тем
+
+    // setup poll-specific controls
+    const pollSection = document.getElementById('poll-section');
+    const pollOptionsContainer = document.getElementById('poll-options-container');
+    const addPollOptionBtn = document.getElementById('add-poll-option');
+    if (addPollOptionBtn) addPollOptionBtn.onclick = () => addPollOption();
+
+    function addPollOption(value = '') {
+        const row = document.createElement('div');
+        row.className = 'answer-row';
+        row.innerHTML = `
+            <input type="text" class="poll-option-text" placeholder="Текст варианта" value="${escapeHtml(value)}">
+            <div class="actions"><button type="button" class="danger">Удалить</button></div>
+        `;
+        row.querySelector('button').onclick = () => row.remove();
+        pollOptionsContainer.appendChild(row);
+    }
 
     if (quizId) {
         document.getElementById('form-title').textContent = 'Редактирование';
@@ -20,6 +58,7 @@ async function initEditor() {
     } else {
         document.getElementById('form-title').textContent = type === 'POLL' ? 'Новый опрос' : 'Новый квиз';
         addQuestionUI();
+        addTopicSelector(); // Добавляем первый селектор темы
     }
 
     if (type === 'POLL') {
@@ -30,12 +69,27 @@ async function initEditor() {
 async function loadTopics() {
     const response = await api('/analitics/topics');
     topics = response.status.startsWith('2') ? response.data || [] : [];
-    document.getElementById('topic-options').innerHTML = topics.map(topic => `
-        <label class="topic-check">
-            <input type="checkbox" value="${topic.id}" style="width:auto;min-height:auto;">
-            ${escapeHtml(topic.name)}
-        </label>
-    `).join('');
+}
+
+function addTopicSelector() {
+    const container = document.getElementById('topic-selection');
+    if (container.children.length >= 3) {
+        return; // Ограничение в 3 темы
+    }
+    const div = document.createElement('div');
+    div.className = 'topic-selector-row';
+    const select = document.createElement('select');
+    select.innerHTML = topics.map(topic => `<option value="${topic.id}">${escapeHtml(topic.name)}</option>`).join('');
+    div.appendChild(select);
+
+    const removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'danger';
+    removeBtn.textContent = 'Удалить';
+    removeBtn.onclick = () => div.remove();
+    div.appendChild(removeBtn);
+
+    container.appendChild(div);
 }
 
 function addQuestionUI(data = null) {
@@ -79,11 +133,18 @@ function addQuestionUI(data = null) {
 function addAnswerUI(container, data = null) {
     const aDiv = document.createElement('div');
     aDiv.className = 'answer-row';
-    aDiv.innerHTML = `
-        <label><input type="checkbox" class="a-correct" ${data?.isCorrect ? 'checked' : ''} style="width:auto;min-height:auto;"> Правильный</label>
-        <input type="text" placeholder="Текст ответа" class="a-text" value="${escapeHtml(data?.text || '')}" required>
-        <div class="actions"><button type="button" class="danger">Удалить</button></div>
-    `;
+    if (type === 'POLL') {
+        aDiv.innerHTML = `
+            <input type="text" placeholder="Текст варианта" class="a-text" value="${escapeHtml(data?.text || '')}" required>
+            <div class="actions"><button type="button" class="danger">Удалить</button></div>
+        `;
+    } else {
+        aDiv.innerHTML = `
+            <label><input type="checkbox" class="a-correct" ${data?.isCorrect ? 'checked' : ''} style="width:auto;min-height:auto;"> Правильный</label>
+            <input type="text" placeholder="Текст ответа" class="a-text" value="${escapeHtml(data?.text || '')}" required>
+            <div class="actions"><button type="button" class="danger">Удалить</button></div>
+        `;
+    }
     aDiv.querySelector('button').onclick = () => aDiv.remove();
     container.appendChild(aDiv);
 }
@@ -92,19 +153,66 @@ function fillForm(quiz) {
     document.getElementById('title').value = quiz.title || '';
     document.getElementById('description').value = quiz.description || '';
     document.getElementById('timeLimit').value = quiz.timeLimitSeconds || quiz.timeLimit || 60;
+
+    const typeSelect = document.getElementById('type-select');
+    if (typeSelect) {
+        type = quiz.type || typeSelect.value;
+        typeSelect.value = type;
+    }
+    
+    const topicContainer = document.getElementById('topic-selection');
+    topicContainer.innerHTML = ''; // Очищаем контейнер
     (quiz.topicIds || []).forEach(topicId => {
-        const input = document.querySelector(`#topic-options input[value="${topicId}"]`);
-        if (input) input.checked = true;
+        addTopicSelector();
+        const lastSelect = topicContainer.lastChild.querySelector('select');
+        if (lastSelect) {
+            lastSelect.value = topicId;
+        }
     });
-    (quiz.questions || []).forEach(q => addQuestionUI(q));
+
+    // clear existing questions/poll options
+    document.getElementById('questions-container').innerHTML = '<h2>Вопросы</h2>';
+    const pollSection = document.getElementById('poll-section');
+    const pollOptionsContainer = document.getElementById('poll-options-container');
+    pollOptionsContainer.innerHTML = '';
+
+    if (type === 'POLL') {
+        // populate poll UI from the first question
+        pollSection.style.display = 'block';
+        document.getElementById('add-q-btn').style.display = 'none';
+        const q = (quiz.questions || [])[0] || { description: '', answers: [] };
+        document.getElementById('poll-question').value = q.description || '';
+        (q.answers || []).forEach(a => addPollOption(a.text));
+    } else {
+        pollSection.style.display = 'none';
+        (quiz.questions || []).forEach(q => addQuestionUI(q));
+    }
 }
 
 async function saveQuiz(e) {
     e.preventDefault();
-    const topicIds = Array.from(document.querySelectorAll('#topic-options input:checked')).map(input => Number(input.value));
+    const topicIds = Array.from(document.querySelectorAll('#topic-selection select')).map(select => Number(select.value));
     if (topicIds.length < 1 || topicIds.length > 3) {
         document.getElementById('form-message').textContent = 'Выберите от 1 до 3 тем.';
         return;
+    }
+
+    let questionsPayload = [];
+    if (type === 'POLL') {
+        const pollQuestion = document.getElementById('poll-question').value;
+        const optionEls = Array.from(document.querySelectorAll('.poll-option-text'));
+        const answers = optionEls.map(el => ({ text: el.value }));
+        questionsPayload = [{ description: pollQuestion, points: 0, type: 'EASY', answers }];
+    } else {
+        questionsPayload = Array.from(document.querySelectorAll('.question-block')).map(q => ({
+            description: q.querySelector('.q-desc').value,
+            points: Number(q.querySelector('.q-points').value) || 0,
+            type: q.querySelector('.q-type').value,
+            answers: Array.from(q.querySelectorAll('.answer-row')).map(a => ({
+                text: a.querySelector('.a-text').value,
+                isCorrect: (a.querySelector('.a-correct') ? a.querySelector('.a-correct').checked : false)
+            }))
+        }));
     }
 
     const payload = {
@@ -114,18 +222,11 @@ async function saveQuiz(e) {
         isPublic: true,
         type: type,
         topicIds,
-        questions: Array.from(document.querySelectorAll('.question-block')).map(q => ({
-            description: q.querySelector('.q-desc').value,
-            points: Number(q.querySelector('.q-points').value) || 0,
-            type: q.querySelector('.q-type').value,
-            answers: Array.from(q.querySelectorAll('.answer-row')).map(a => ({
-                text: a.querySelector('.a-text').value,
-                isCorrect: a.querySelector('.a-correct').checked
-            }))
-        }))
+        questions: questionsPayload
     };
 
-    const result = await api(quizId ? `/quizzes/api/update/${quizId}` : '/quizzes/api/create', {
+    const endpoint = quizId ? (type === 'POLL' ? `/polls/api/update/${quizId}` : `/quizzes/api/update/${quizId}`) : (type === 'POLL' ? '/polls/api/create' : '/quizzes/api/create');
+    const result = await api(endpoint, {
         method: 'POST',
         body: JSON.stringify(payload)
     });
